@@ -1,4 +1,4 @@
-Package: accessexport
+Package: fetchaccess
 Type: Package
 Title: Fetch Data And Metadata From Access
 Version: 0.1.0
