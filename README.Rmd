@@ -1,7 +1,4 @@
 ---
-title: "Access/R Data Dictionary Creator"
-author: "Sarah Wright"
-date: '2022-07-26'
 output: 
   html_document:
     keep_md: yes
