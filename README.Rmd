@@ -1,0 +1,70 @@
+---
+title: "Access/R Data Dictionary Creator"
+author: "Sarah Wright"
+date: '2022-07-26'
+output: html_document
+---
+```{r setup, include=FALSE}
+library(magrittr)
+```
+# Setting up your Access database
+
+## Create data export queries in your protocol database
+
+![Screenshot of export query list in Access, using 'qExport' as the prefix](instructionFigures/ExportQueries.PNG)
+
+If you haven't done this already, the first step in the process is to create saved Access queries that wrangle your relational database tables into a flat format suitable for CSV export. In general, try not to summarize or perform calculations at this stage. Instead, aim to make each query more or less standalone by including site- and visit-level information like park, site, visit date, etc. You should also replace integer foreign keys to lookup tables with a meaningful short code as defined in the lookup table.
+
+Name your queries with a consistent prefix - this is necessary for automated metadata generation. "qExport" is recommended but you may choose a different prefix if this conflicts with an existing naming scheme.
+
+## Copy objects from Metadata Generation Template database
+
+![Screenshot of objects to be copied from template to working database](instructionFigures/CopyObjects.PNG)
+
+There are four objects that must be copied from the template database to your protocol database:
+
+  - qsysMetadataAttributes (query)
+  - frmMakeDataDict (form)
+  - AutoExec (macro)
+  - mod_DocumentationTools (module)
+  
+Use **Ctrl + click** to select them all, then right click and select **Copy**. Open your protocol database, then right click anywhere in the navigation pane and select **Paste**.
+
+You are now done with the template database, although it is a good idea to save it somewhere that you can find it in case any of the objects you copied are accidentally lost.
+
+## Fill in some information manually
+
+In the navigation pane of your protocol database, double click on **frmMakeDataDict**. In the form that opens, enter the prefixes of your data export queries and lookup tables. You can change the default values of these fields if you would like.
+
+Click on **Create Metadata**. This will generate some metadata automatically, but for it to create an EML-compatible data dictionary, you will need to fill in some information manually. The good news is that you only need to do this once (but remember to update it if you make changes to your database).
+
+You should see two tables that begin with "tsys_editMetadata": **tsys_editMetadataLookupDefs** and **tsys_editMetadataAttributeInfo**.
+
+### Populating tsys_editMetadataLookupDefs
+
+Ultimately, this table will allow codes and/or ID's in your exported data to be mapped to their definitions.
+
+  1. Double click on **tsys_editMetadataLookupDefs** to open it. If everything has gone well up to this point, then the **lookupName** column should be populated with the names of the lookup tables in your database. 
+  2. It may be the case that some of these lookup tables aren't referenced in the exported dataset, or the codes are self-explanatory (e.g. "yes/no"). Delete these rows from **tsys_editMetadataLookupDefs**.
+  3. There may be tables that you are using as lookups but aren't named accordingly (e.g. "tbl_Sites"). Add the names of these tables to the **lookupName** column.
+  4. For each lookup table in the **lookupName** column, determine which column clearly defines the meaning of the code or ID. Enter the name of that column under **definitionColumnName**.
+  5. Save and close **tsys_editMetadataLookupDefs**. You are now done with this table! Just remember to update it if you create or delete a lookup table in the future (or change the definition column name of an existing lookup).
+
+### Populating tsys_editMetadataAttributeInfo
+
+This table contains metadata on the columns of your exported data. This metadata has been populated for you where it can be automated, but there is some information you will need to provide manually.
+
+  1. Open **tsys_editMetadataAttributeInfo**. The first four columns (**tableName**, **attributeName**, **readonlyDescription**, and **readonlyClass**) should be fully populated with information about each column in each export query. Do not modify or delete any of the data in these columns.
+  2. Populate the **unit** column. Leave it blank for non-numeric fields (text, Yes/No, and Date/Time). For all numeric fields, including AutoNumber, you must enter a valid EML unit. Enter "dimensionless" for unitless quantities. See below for a full list of valid EML units (*use the value in the ID column*). 
+      - If your unit is not present in the list below, enter it anyway. Make sure that it contains no spaces or special characters and that you enter it consistently each time. You will record this as a custom unit later, in the EML generation section of the Data Release Report.
+  3. Populate the **missingValueCode** and **missingValueCodeExplanation** columns. You only need to fill these in for columns that use codes instead of or in addition to blanks to indicate missing data (e.g. -999, "ND"). 
+  4. (Optional at this stage) Populate the **dateTimeFormatString** column. Depending on what data wrangling you do in R, you may wish to populate this column in R instead.
+  
+```{r eml_units, echo=FALSE}
+units <- EML::get_unitList()$units
+units %>%
+  dplyr::select(id, unitType, description, abbreviation) %>%
+  DT::datatable()
+```
+  
+  
