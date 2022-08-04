@@ -2,4 +2,5 @@
 
 export("%>%")
 export(fetchFromAccess)
+export(getTemplateDatabase)
 importFrom(magrittr,"%>%")
