@@ -6,14 +6,14 @@
 #' @param data_prefix Prefix used in your Access database to indicate data export tables and/or queries
 #' @param lookup_prefix Prefix used in your Access database to indicate lookup tables
 #' @param tables_to_omit Character vector of table names that match the data and/or lookup prefixes but should not be included in the data import
-#' @param custom_wrangler Optional - function that takes arguments `data`, `lookups`, and `metadata`. `data` and `lookup` are lists whose names and content correspond to the data and lookup tables in the database. Names do not include prefixes. `metadata` is a tibble of field-level metadata called `MetadataAttributes`. See qsys_MetadataAttributes in the Access database for the contents of this tibble. This function should perform any necessary data wrangling specific to your dataset and return a named list containing `data`, `lookups`, and `metadata` with contents modified as needed. Do not remove or add tibbles in `data` or `lookups` and do not modify their names. If you add, remove, or rename columns in a tibble in `data`, you must modify the contents of `metadata` accordingly. Do not modify the structure or column names of `metadata`. The structure and column names of `lookups` should also be left as-is. Typically the only necessary modification to `lookups` will be to filter overly large species lists to only include taxa that appear in the data.
+#' @param custom_wrangler Optional - function that takes arguments `data`, `lookups`, and `metadata`. `data` and `lookups` are lists whose names and content correspond to the data and lookup tables in the database. Names do not include prefixes. `metadata` contains a tibble of field-level metadata called `MetadataAttributes`. See qsys_MetadataAttributes in the Access database for the contents of this tibble. This function should perform any necessary data wrangling specific to your dataset and return a named list containing `data`, `lookups`, and `metadata` with contents modified as needed. Do not remove or add tibbles in `data` or `lookups` and do not modify their names. If you add, remove, or rename columns in a tibble in `data`, you must modify the contents of `metadata` accordingly. Do not modify the structure or column names of `metadata`. The structure and column names of `lookups` should also be left as-is. Typically the only necessary modification to `lookups` will be to filter overly large species lists to only include taxa that appear in the data.
 #' @param save_to_files Save data and data dictionaries to files on hard drive?
 #' @inheritParams writeToFiles
 #'
 #' @return A nested list containing three lists of tibbles: data, lookups, and metadata.
 #' @export
 #'
-fetchFromAccess <- function(db_path, data_prefix = "qExport", lookup_prefix = "tlu", tables_to_omit, custom_wrangler, save_to_files = FALSE, data_dir = here::here("data", "final"), dictionary_dir = here::here("data", "dictionary")){
+fetchFromAccess <- function(db_path, data_prefix = "qExport", lookup_prefix = "tlu", tables_to_omit = c(), custom_wrangler, save_to_files = FALSE, data_dir = here::here("data", "final"), dictionary_dir = here::here("data", "dictionary")){
   connection <- RODBC::odbcConnectAccess2007(db_path)  # Load datasets for use. Pulls directly from Access database back end
 
   metadata_prefix <- c("tsys_", "qsys_")  # Prefixes of metadata queries/tables
@@ -38,15 +38,14 @@ fetchFromAccess <- function(db_path, data_prefix = "qExport", lookup_prefix = "t
   names(lookups) <- stringr::str_remove(lookup_tables, paste0("(", lookup_prefix, ")", collapse = "|"))
   metadata <- sapply(metadata_tables, fetchAndTidy, connection = connection)
   names(metadata) <- stringr::str_remove(metadata_tables, paste0("(", metadata_prefix, ")", collapse = "|"))
-  odbcCloseAll()  # Close db connection
+  RODBC::odbcCloseAll()  # Close db connection
 
   # Do custom data wrangling
-  if (!missing(data_wrangler)) {
-    data <- data_wrangler(data, lookups, metadata)
-  }
-
-  if (!missing(metadata_wrangler)) {
-    metadata <- metadata_wrangler(metadata)
+  if (!missing(custom_wrangler)) {
+    new_tables <- custom_wrangler(data, lookups, metadata)
+    data <- new_tables$data
+    lookups <- new_tables$lookups
+    metadata <- new_tables$metadata
   }
 
   # --- Make data dictionaries ---

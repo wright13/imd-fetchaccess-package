@@ -8,7 +8,7 @@ fetchFromAccess(
   db_path,
   data_prefix = "qExport",
   lookup_prefix = "tlu",
-  tables_to_omit,
+  tables_to_omit = c(),
   custom_wrangler,
   save_to_files = FALSE,
   data_dir = here::here("data", "final"),
@@ -24,7 +24,7 @@ fetchFromAccess(
 
 \item{tables_to_omit}{Character vector of table names that match the data and/or lookup prefixes but should not be included in the data import}
 
-\item{custom_wrangler}{Optional - function that takes arguments `data`, `lookups`, and `metadata`. `data` and `lookup` are lists whose names and content correspond to the data and lookup tables in the database. Names do not include prefixes. `metadata` is a tibble of field-level metadata called `MetadataAttributes`. See qsys_MetadataAttributes in the Access database for the contents of this tibble. This function should perform any necessary data wrangling specific to your dataset and return a named list containing `data`, `lookups`, and `metadata` with contents modified as needed. Do not remove or add tibbles in `data` or `lookups` and do not modify their names. If you add, remove, or rename columns in a tibble in `data`, you must modify the contents of `metadata` accordingly. Do not modify the structure or column names of `metadata`. The structure and column names of `lookups` should also be left as-is. Typically the only necessary modification to `lookups` will be to filter overly large species lists to only include taxa that appear in the data.}
+\item{custom_wrangler}{Optional - function that takes arguments `data`, `lookups`, and `metadata`. `data` and `lookups` are lists whose names and content correspond to the data and lookup tables in the database. Names do not include prefixes. `metadata` contains a tibble of field-level metadata called `MetadataAttributes`. See qsys_MetadataAttributes in the Access database for the contents of this tibble. This function should perform any necessary data wrangling specific to your dataset and return a named list containing `data`, `lookups`, and `metadata` with contents modified as needed. Do not remove or add tibbles in `data` or `lookups` and do not modify their names. If you add, remove, or rename columns in a tibble in `data`, you must modify the contents of `metadata` accordingly. Do not modify the structure or column names of `metadata`. The structure and column names of `lookups` should also be left as-is. Typically the only necessary modification to `lookups` will be to filter overly large species lists to only include taxa that appear in the data.}
 
 \item{save_to_files}{Save data and data dictionaries to files on hard drive?}
 
