@@ -11,6 +11,7 @@ RoxygenNote: 7.1.2
 Imports: 
     dplyr,
     here,
+    magrittr,
     readr,
     RODBC,
     stringr,
