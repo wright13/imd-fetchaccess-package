@@ -1,12 +1,37 @@
 ---
+title: "Access/R Data Dictionary Creator"
+author: "Sarah Wright"
+date: '2022-07-26'
 output: 
-  html_document:
-    keep_md: yes
+  html_document: default
+  github_document:
+    html_preview: false
+always_allow_html: true
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding,
+  output_format = "all") })
 ---
 ```{r setup, include=FALSE}
 library(magrittr)
 ```
+# About this package
+
+This R package works in concert with an Access tool. Access table/column metadata can only be accessed via VBA, so the Access tool creates tables and queries with metadata that can be read through an ODBC connection. You can copy the necessary Access objects into your database from the template database in the `inst` folder of the GitHub repository for this package, or by running the following after installing the package:
+
+```r
+destination_folder <- "C:\\Users\\yourusername\\Documents"  # Change this to wherever you want to save the template db
+getTemplateDatabase(destination_folder)
+```
+
+The only R function in this package that you need is `fetchFromAccess()`. Given the path to your database, the prefixes that indicate export queries and lookup tables in your database, and an optional function that performs any custom data wrangling that you prefer to do on the R side instead of the Access query side, it will output a list of data and data dictionary tables. Optionally, it will also write these tables to csv (data) and tsv (data dictionary) files on disk. These files are formatted for compatibility with the IMD DRR Template EML generation tools.
+
+For `fetchFromAccess()` to work, you must first complete the following steps to set up your Access database.
+
 # Setting up your Access database
+
+## Ensure relationships are up to date
+
+This tool relies on table relationships being set up correctly. In your Access database, go to **Database Tools** -> **Relationships** and verify that table relationships exist (*including lookup tables*) and are correct. 
 
 ## Create data export queries in your protocol database
 
@@ -17,6 +42,13 @@ If you haven't done this already, the first step in the process is to create sav
 Name your queries with a consistent prefix - this is necessary for automated metadata generation. "qExport" is recommended but you may choose a different prefix if this conflicts with an existing naming scheme.
 
 ## Copy objects from Metadata Generation Template database
+
+Download the Metadata Generation Template database from the `inst` folder of the GitHub repository for this package, or by running the following after installing the package:
+
+```r
+destination_folder <- "C:\\Users\\yourusername\\Documents"  # Change this to wherever you want to save the template db
+getTemplateDatabase(destination_folder)
+```
 
 ![Screenshot of objects to be copied from template to working database](instructionFigures/CopyObjects.PNG)
 
@@ -54,7 +86,7 @@ Ultimately, this table will allow codes and/or ID's in your exported data to be 
 This table contains metadata on the columns of your exported data. This metadata has been populated for you where it can be automated, but there is some information you will need to provide manually.
 
   1. Open **tsys_editMetadataAttributeInfo**. The first four columns (**tableName**, **attributeName**, **readonlyDescription**, and **readonlyClass**) should be fully populated with information about each column in each export query. Do not modify or delete any of the data in these columns.
-  2. Populate the **unit** column. Leave it blank for non-numeric fields (text, Yes/No, and Date/Time). For all numeric fields, including AutoNumber, you must enter a valid EML unit. Enter "dimensionless" for unitless quantities. See below for a full list of valid EML units (*use the value in the ID column*). 
+  2. Populate the **unit** column. Leave it blank for non-numeric fields (text, Yes/No, and Date/Time). For all numeric fields, including AutoNumber, you must enter a valid EML unit. Enter "dimensionless" for unitless quantities. See below for a full list of valid EML units (*use the value in the ID column*) [Note: download README.html to see the list; it does not render properly on GitHub]. 
       - If your unit is not present in the list below, enter it anyway. Make sure that it contains no spaces or special characters and that you enter it consistently each time. You will record this as a custom unit later, in the EML generation section of the Data Release Report.
   3. Populate the **missingValueCode** and **missingValueCodeExplanation** columns. You only need to fill these in for columns that use codes instead of or in addition to blanks to indicate missing data (e.g. -999, "ND"). 
   4. (Optional at this stage) Populate the **dateTimeFormatString** column. Depending on what data wrangling you do in R, you may wish to populate this column in R instead.
