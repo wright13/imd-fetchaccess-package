@@ -58,7 +58,7 @@ fetchFromAccess <- function(db_path, data_prefix = "qExport", lookup_prefix = "t
   # Fields dictionary
   fields_dict <- metadata$MetadataAttributes %>%
     dplyr::mutate(tableName = stringr::str_remove(tableName, "qExport"),
-                  class = case_when(class %in% c("Short Text", "Long Text", "Memo", "Text", "Yes/No", "Hyperlink") ~ "character",
+                  class = dplyr::case_when(class %in% c("Short Text", "Long Text", "Memo", "Text", "Yes/No", "Hyperlink") ~ "character",
                                     class %in% c("Number", "Large Number", "Byte", "Integer", "Long Integer", "Single", "Double", "Replication ID", "Decimal", "AutoNumber", "Currency") ~ "numeric",
                                     class %in% c("Date/Time", "Date/Time Extended") ~ "Date",
                                     TRUE ~ "unknown")) %>%
