@@ -2,7 +2,8 @@ Package: fetchaccess
 Type: Package
 Title: Fetch Data And Metadata From Access
 Version: 0.1.0
-Author: person("Sarah", "Wright", email = "sarah_wright@nps.gov", role = c("aut", "cre"))
+Authors@R: 
+    person("Sarah", "Wright", , "sarah_wright@nps.gov", role = c("aut", "cre"))
 Description: Reads data and metadata from an Access database using the metadata generator tool.
 License: CC0
 Encoding: UTF-8
