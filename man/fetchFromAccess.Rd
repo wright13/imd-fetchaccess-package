@@ -8,19 +8,28 @@ fetchFromAccess(
   db_path,
   data_prefix = "qExport",
   lookup_prefix = "tlu",
+  as.is = TRUE,
+  add_r_classes = FALSE,
   tables_to_omit = c(),
   custom_wrangler,
   save_to_files = FALSE,
   data_dir = here::here("data", "final"),
-  dictionary_dir = here::here("data", "dictionary")
+  dictionary_dir = here::here("data", "dictionary"),
+  lookup_dir = NA
 )
 }
 \arguments{
 \item{db_path}{Path to your Access database}
 
-\item{data_prefix}{Prefix used in your Access database to indicate data export tables and/or queries}
+\item{data_prefix}{Character vector of prefix(es) used in your Access database to indicate data export tables and/or queries.}
 
-\item{lookup_prefix}{Prefix used in your Access database to indicate lookup tables}
+\item{lookup_prefix}{Character vector of prefix(es) used in your Access database to indicate lookup tables.}
+
+\item{as.is}{which (if any) columns returned as character should be
+    converted to another type?  Allowed values are as for
+    \code{\link{read.table}}.  See \sQuote{Details}.}
+
+\item{add_r_classes}{Include R classes in addition to EML classes?}
 
 \item{tables_to_omit}{Character vector of table names that match the data and/or lookup prefixes but should not be included in the data import}
 
@@ -31,10 +40,15 @@ fetchFromAccess(
 \item{data_dir}{Folder to store data csv's in}
 
 \item{dictionary_dir}{Folder to store data dictionaries in}
+
+\item{lookup_dir}{Optional folder to store lookup tables in. If left as `NA`, lookups won't be exported.}
 }
 \value{
 A nested list containing three lists of tibbles: data, lookups, and metadata.
 }
 \description{
 This function assumes that you are using the Access Metadata Generator in your Access database.
+}
+\details{
+See [RODBC::sqlFetch()] and [RODBC::sqlQuery()] for more information on the `as.is` argument.
 }

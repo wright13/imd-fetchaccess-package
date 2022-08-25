@@ -4,7 +4,7 @@
 \alias{fetchAndTidy}
 \title{Fetch and tidy data}
 \usage{
-fetchAndTidy(tbl_name, connection)
+fetchAndTidy(tbl_name, connection, as.is)
 }
 \arguments{
 \item{tbl_name}{Name of data table}
