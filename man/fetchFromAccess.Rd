@@ -7,23 +7,26 @@
 fetchFromAccess(
   db_path,
   data_prefix = "qExport",
+  data_regex = paste0("(^", data_prefix, ".*)", collapse = "|"),
   lookup_prefix = "tlu",
-  as.is = TRUE,
+  lookup_regex = paste0("(^", lookup_prefix, ".*)", collapse = "|"),
+  as.is = FALSE,
   add_r_classes = FALSE,
-  tables_to_omit = c(),
   custom_wrangler,
   save_to_files = FALSE,
-  data_dir = here::here("data", "final"),
-  dictionary_dir = here::here("data", "dictionary"),
-  lookup_dir = NA
+  ...
 )
 }
 \arguments{
 \item{db_path}{Path to your Access database}
 
-\item{data_prefix}{Character vector of prefix(es) used in your Access database to indicate data export tables and/or queries.}
+\item{data_prefix}{Character vector of prefix(es) used in your Access database to indicate data export tables and/or queries.Be sure to include special characters like underscores (e.g. 'tbl_'). If you are using the `data_regex` argument, be sure to include prefixes for all matched tables.}
 
-\item{lookup_prefix}{Character vector of prefix(es) used in your Access database to indicate lookup tables.}
+\item{data_regex}{Regular expression to match names of data tables. You can ignore this if your data table prefix(es) are specific to the tables you want to read in. If you only want to read in a subset of the tables specified by `data_prefix`, use this argument to specify only the tables you want. `data_prefix` is still required, as it is used to clean up table names.}
+
+\item{lookup_prefix}{Character vector of prefix(es) used in your Access database to indicate lookup tables. Be sure to include special characters like underscores (e.g. 'tlu_'). If you are using the `lookup_regex` argument, be sure to include prefixes for all matched tables.}
+
+\item{lookup_regex}{Regular expression to match names of lookup tables. You can ignore this if your lookup table prefix(es) are specific to the lookups you want to read in. If you only want to read in a subset of the lookup tables specified by `lookup_prefix`, use this argument to specify only the tables you want. This argument is especially useful if you have one or two tables labeled as 'data' tables (e.g. tbl_Sites) that act as lookups in some cases. `lookup_prefix` is still required, as it is used to clean up lookup names.}
 
 \item{as.is}{which (if any) columns returned as character should be
     converted to another type?  Allowed values are as for
@@ -31,17 +34,11 @@ fetchFromAccess(
 
 \item{add_r_classes}{Include R classes in addition to EML classes?}
 
-\item{tables_to_omit}{Character vector of table names that match the data and/or lookup prefixes but should not be included in the data import}
-
 \item{custom_wrangler}{Optional - function that takes arguments `data`, `lookups`, and `metadata`. `data` and `lookups` are lists whose names and content correspond to the data and lookup tables in the database. Names do not include prefixes. `metadata` contains a tibble of field-level metadata called `MetadataAttributes`. See qsys_MetadataAttributes in the Access database for the contents of this tibble. This function should perform any necessary data wrangling specific to your dataset and return a named list containing `data`, `lookups`, and `metadata` with contents modified as needed. Do not remove or add tibbles in `data` or `lookups` and do not modify their names. If you add, remove, or rename columns in a tibble in `data`, you must modify the contents of `metadata` accordingly. Do not modify the structure or column names of `metadata`. The structure and column names of `lookups` should also be left as-is. Typically the only necessary modification to `lookups` will be to filter overly large species lists to only include taxa that appear in the data.}
 
 \item{save_to_files}{Save data and data dictionaries to files on hard drive?}
 
-\item{data_dir}{Folder to store data csv's in}
-
-\item{dictionary_dir}{Folder to store data dictionaries in}
-
-\item{lookup_dir}{Optional folder to store lookup tables in. If left as `NA`, lookups won't be exported.}
+\item{...}{Options to pass to [writeToFiles()]}
 }
 \value{
 A nested list containing three lists of tibbles: data, lookups, and metadata.
