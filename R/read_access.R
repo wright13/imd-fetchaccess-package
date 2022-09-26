@@ -73,7 +73,16 @@ fetchFromAccess <- function(db_path,
                                     TRUE ~ "unknown")) %>%
     dplyr::select(tableName, attributeName, attributeDefinition, class, unit, dateTimeFormatString, missingValueCode, missingValueCodeExplanation, sourceField, sourceTable)
 
-  # Categories dictionary
+
+  # Lookups wrangling
+  # added a bit here to include the table name as "shortName" - LIZZY
+  # Also this bit is now complicated and doesn't work with the SNPL data as it is pulling in way too many relationships
+  #   that are not correct as they are not in catvar.
+  # The original way was better and worked fine, so I added the changes to this version, but as you will see if you run it with SNPL data,
+  #   it won't work as there should only be 4 categorical fields, not 14
+  # However the basis is there. you need to include the tableNme in the lookups, and then use that to join to fields dict and turn the class to categorical
+
+
 
   # Get lookup table relationship info
   lookup_rels <- metadata$MetadataRelationFields %>%
@@ -82,20 +91,32 @@ fetchFromAccess <- function(db_path,
 
   # Case 1: lookup table is present in query and column in export query is pulling from lookup table
   lookup_fields_1 <- fields_dict %>%
-    dplyr::select(sourceField, sourceTable, attributeName) %>%
+    dplyr::select("shortName" = tableName,sourceField, sourceTable, attributeName) %>%
     dplyr::inner_join(lookup_rels, by = c("sourceTable" = "lookupName")) %>%
     dplyr::select(sourceTable, sourceField, definitionColumnName = foreignDescriptionName, attributeName) %>%
     unique()
 
   # Case 2: there is a related lookup table, but the export query does not contain the lookup table and instead just pulls from the foreign key column.
   lookup_fields_2 <- fields_dict %>%
-    dplyr::select(sourceField, sourceTable, attributeName) %>%
+    dplyr::select("shortName" = tableName,sourceField, sourceTable, attributeName) %>%
     dplyr::inner_join(lookup_rels, by = c("sourceTable" = "tableName", "sourceField" = "foreignKeyName")) %>%
     dplyr::select(sourceTable = lookupName, sourceField = lookupAttributeName, definitionColumnName = foreignDescriptionName, attributeName) %>%
     unique()
 
   lookup_fields <- rbind(lookup_fields_1, lookup_fields_2) %>% unique()
 
+  ## This is where we need to update the units in fields_dict that are look ups to "categorical"
+  #use lookup_fields to do this- added a bit to it to include the table name attribute
+  fields_dict %<>%
+    dplyr::left_join(lookup_fields %>%
+                       dplyr::select(shortName, attributeName) %>%
+                       dplyr::mutate(categorical = "yes"),
+                     by = c("tableName" = "shortName", "attributeName")) %>%
+    dplyr::mutate(class = dplyr::case_when(categorical == "yes"~ "categorical",
+                                           TRUE ~ class)) %>%
+    dplyr::select(-categorical)
+
+  # Categories dictionary
   categories_dict <- mapply(function(lkup, lkup_code, lkup_def, attr) {
     lkup <- stringr::str_remove(lkup, paste0("(", lookup_prefix, ")", collapse = "|"))
     df <- tibble::tibble(attributeName = attr,
