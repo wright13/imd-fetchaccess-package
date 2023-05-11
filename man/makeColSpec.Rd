@@ -7,11 +7,11 @@
 makeColSpec(fields)
 }
 \arguments{
-\item{fields}{Fields data dictionary, as returned by [fetchFromAccess]}
+\item{fields}{Fields data dictionary, as returned by \link{fetchFromAccess}}
 }
 \value{
 A list of lists
 }
 \description{
-Given a fields data dictionary, create a list of column specifications that can be used in [readr::read_csv()] or [vroom::vroom()]
+Given a fields data dictionary, create a list of column specifications that can be used in \code{\link[readr:read_delim]{readr::read_csv()}} or \code{\link[vroom:vroom]{vroom::vroom()}}
 }

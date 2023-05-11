@@ -7,12 +7,12 @@
 getRClass(fields, data)
 }
 \arguments{
-\item{fields}{Fields data dictionary, as returned by [fetchFromAccess]}
+\item{fields}{Fields data dictionary, as returned by \link{fetchFromAccess}}
 
-\item{data}{List of data tables, as returned by [fetchFromAccess]}
+\item{data}{List of data tables, as returned by \link{fetchFromAccess}}
 }
 \value{
-`fields` with an additional rClass column
+\code{fields} with an additional rClass column
 }
 \description{
 Helper function to get primary R class of each data column

@@ -17,7 +17,6 @@
 #'
 #' @return A nested list containing three lists of tibbles: data, lookups, and metadata.
 #' @export
-#'
 fetchFromAccess <- function(db_path,
                             data_prefix = "qExport",
                             data_regex = paste0("(^", data_prefix, ".*)", collapse = "|"),
@@ -132,10 +131,12 @@ fetchFromAccess <- function(db_path,
 #' @param data_dir Folder to store data csv's in
 #' @param dictionary_dir Folder to store data dictionaries in
 #' @param lookup_dir Optional folder to store lookup tables in. If left as `NA`, lookups won't be exported.
+#' @param dictionary_filenames Named list with names `c("tables", "attributes", "categories")` indicating what to name the tables, attributes, and categories data dictionaries. You are encouraged to keep the default names unless you have a good reason to change them.
+#' @param verbose Output feedback to console?
 #'
 #' @export
 #'
-writeToFiles <- function(all_tables, data_dir = here::here("data", "final"), dictionary_dir = here::here("data", "dictionary"), metadata_filenames = c(tables = "data_dictionary_tables.txt",
+writeToFiles <- function(all_tables, data_dir = here::here("data", "final"), dictionary_dir = here::here("data", "dictionary"), dictionary_filenames = c(tables = "data_dictionary_tables.txt",
                                                                                                                                                        attributes = "data_dictionary_attributes.txt",
                                                                                                                                                        categories = "data_dictionary_categories.txt"),
                          lookup_dir = NA, verbose = FALSE) {
@@ -177,12 +178,12 @@ writeToFiles <- function(all_tables, data_dir = here::here("data", "final"), dic
     dir.create(dictionary_dir, recursive = TRUE)
   }
   if (verbose) {message(paste0("\nWriting metadata to ", dictionary_dir, "..."))}
-  if (verbose) {message(paste0("\t\t", metadata_filenames["tables"]))}
-  readr::write_tsv(tables_dict, here::here(dictionary_dir, metadata_filenames["tables"]), na = "", append = FALSE)
-  if (verbose) {message(paste0("\t\t", metadata_filenames["attributes"]))}
-  readr::write_tsv(fields_dict, here::here(dictionary_dir, metadata_filenames["attributes"]), na = "", append = FALSE)
-  if (verbose) {message(paste0("\t\t", metadata_filenames["categories"]))}
-  readr::write_tsv(categories_dict, here::here(dictionary_dir, metadata_filenames["categories"]), na = "", append = FALSE)
+  if (verbose) {message(paste0("\t\t", dictionary_filenames["tables"]))}
+  readr::write_tsv(tables_dict, here::here(dictionary_dir, dictionary_filenames["tables"]), na = "", append = FALSE)
+  if (verbose) {message(paste0("\t\t", dictionary_filenames["attributes"]))}
+  readr::write_tsv(fields_dict, here::here(dictionary_dir, dictionary_filenames["attributes"]), na = "", append = FALSE)
+  if (verbose) {message(paste0("\t\t", dictionary_filenames["categories"]))}
+  readr::write_tsv(categories_dict, here::here(dictionary_dir, dictionary_filenames["categories"]), na = "", append = FALSE)
 }
 
 #' Fetch and tidy data

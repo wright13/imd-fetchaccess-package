@@ -15,14 +15,14 @@ writeToFiles(
 )
 }
 \arguments{
-\item{all_tables}{Output of `fetchFromAccess()`}
+\item{all_tables}{Output of \code{fetchFromAccess()}}
 
 \item{data_dir}{Folder to store data csv's in}
 
 \item{dictionary_dir}{Folder to store data dictionaries in}
 
-\item{lookup_dir}{Optional folder to store lookup tables in. If left as `NA`, lookups won't be exported.}
+\item{lookup_dir}{Optional folder to store lookup tables in. If left as \code{NA}, lookups won't be exported.}
 }
 \description{
-You shouldn't need to call this function directly unless you are using it to write a data export function for another R package. If you are using this package on its own, you will usually want to call `fetchFromAccess(save_to_files = TRUE)`.
+You shouldn't need to call this function directly unless you are using it to write a data export function for another R package. If you are using this package on its own, you will usually want to call \code{fetchFromAccess(save_to_files = TRUE)}.
 }

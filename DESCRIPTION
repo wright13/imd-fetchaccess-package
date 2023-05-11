@@ -18,3 +18,4 @@ Imports:
     stringr,
     tibble,
     utf8
+Roxygen: list(markdown = TRUE)
