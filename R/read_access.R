@@ -59,49 +59,61 @@ fetchFromAccess <- function(db_path,
   # --- Make data dictionaries ---
   # Tables dictionary
   tables_dict <- metadata$MetadataQueries %>%
-    dplyr::mutate(tableName = stringr::str_remove(tableName, data_prefix),
+    dplyr::mutate(tableName = stringr::str_remove(tableName, paste0("(", data_prefix, ")", collapse = "|")),
                   fileName = paste0(tableName, ".csv")) %>%
     dplyr::select(tableName, fileName, tableDescription)
 
   # Fields dictionary
-  fields_dict <- metadata$MetadataAttributes %>%
-    dplyr::mutate(tableName = stringr::str_remove(tableName, data_prefix),
+  fields_dict <- metadata$editMetadataAttributeInfo %>%
+    dplyr::mutate(tableName = stringr::str_remove(tableName, paste0("(", data_prefix, ")", collapse = "|")),
                   class = dplyr::case_when(class %in% c("Short Text", "Long Text", "Memo", "Text", "Yes/No", "Hyperlink") ~ "character",
                                     class %in% c("Number", "Large Number", "Byte", "Integer", "Long Integer", "Single", "Double", "Replication ID", "Decimal", "AutoNumber", "Currency") ~ "numeric",
                                     class %in% c("Date/Time", "Date/Time Extended") ~ "Date",
-                                    TRUE ~ "unknown")) %>%
-    dplyr::select(tableName, attributeName, attributeDefinition, class, unit, dateTimeFormatString, missingValueCode, missingValueCodeExplanation, sourceField, sourceTable)
+                                    TRUE ~ "unknown"),
+                  lookup = stringr::str_remove(lookup, paste0("(", lookup_prefix, ")", collapse = "|"))) %>%
+    dplyr::select(tableName, attributeName, attributeDefinition, class, unit, dateTimeFormatString, missingValueCode, missingValueCodeExplanation, lookup)
 
   # Categories dictionary
 
-  # Get lookup table relationship info
-  lookup_rels <- metadata$MetadataRelationFields %>%
-    dplyr::filter(!is.na(foreignDescriptionName),
-                  (lookupName %in% fields_dict$sourceTable) | ((tableName %in% fields_dict$sourceTable) & (foreignKeyName %in% fields_dict$sourceField)))
-
-  # Case 1: lookup table is present in query and column in export query is pulling from lookup table
-  lookup_fields_1 <- fields_dict %>%
-    dplyr::select(sourceField, sourceTable, attributeName) %>%
-    dplyr::inner_join(lookup_rels, by = c("sourceTable" = "lookupName")) %>%
-    dplyr::select(sourceTable, sourceField, definitionColumnName = foreignDescriptionName, attributeName) %>%
+  # Get attributes that are associated with a lookup
+  category_attrs <- dplyr::select(fields_dict, attributeName, lookup) %>%
+    dplyr::filter(!is.na(lookup)) %>%
     unique()
 
-  # Case 2: there is a related lookup table, but the export query does not contain the lookup table and instead just pulls from the foreign key column.
-  lookup_fields_2 <- fields_dict %>%
-    dplyr::select(sourceField, sourceTable, attributeName) %>%
-    dplyr::inner_join(lookup_rels, by = c("sourceTable" = "tableName", "sourceField" = "foreignKeyName")) %>%
-    dplyr::select(sourceTable = lookupName, sourceField = lookupAttributeName, definitionColumnName = foreignDescriptionName, attributeName) %>%
-    unique()
+  # Get lookups that have code and definition fields defined
+  lookup_defs <- metadata$editMetadataLookupDefs %>%
+    dplyr::filter(!is.na(keyColumnName) & !is.na(definitionColumnName)) %>%
+    dplyr::mutate(lookupName = stringr::str_remove(lookupName, paste0("(", lookup_prefix, ")", collapse = "|")))
 
-  lookup_fields <- rbind(lookup_fields_1, lookup_fields_2) %>% unique()
+  # Throw an error if there are attributes with a lookup table not defined in the list of lookup tables and cols, or vice versa
+  if (any(!(category_attrs$lookup %in% lookup_defs$lookupName)) || any(!(lookup_defs$lookupName %in% category_attrs$lookup))) {
+    if (any(!(category_attrs$lookup %in% lookup_defs$lookupName))) {
+      msg_1 <- paste0("Information missing from tsys_editMetadataLookupDefs for ", paste0(category_attrs$lookup[!(category_attrs$lookup %in% lookup_defs$lookupName)], collapse = ", "), ".")
+    } else {
+      msg_1 <- NULL
+    }
 
-  categories_dict <- mapply(function(lkup, lkup_code, lkup_def, attr) {
-    lkup <- stringr::str_remove(lkup, paste0("(", lookup_prefix, ")", collapse = "|"))
-    df <- tibble::tibble(attributeName = attr,
-                         code = as.character(lookups[[lkup]][[lkup_code]]),
-                         definition = as.character(lookups[[lkup]][[lkup_def]]))
-    return(df)
-  }, lookup_fields$sourceTable, lookup_fields$sourceField, lookup_fields$definitionColumnName, lookup_fields$attributeName, SIMPLIFY = FALSE)
+    if (any(!(lookup_defs$lookupName %in% category_attrs$lookup))) {
+      msg_2 <- paste0(paste0(lookup_defs$lookupName[!(lookup_defs$lookupName %in% category_attrs$lookup)], collapse = ", "), " not present in lookup column of tsys_editMetadataAttributeInfo.")
+    } else {
+      msg_2 <- NULL
+    }
+
+    msg <- paste0(c(msg_1, msg_2), collapse = "\n")
+    stop(msg)
+  }
+
+  categories_dict <- lapply(1:nrow(category_attrs), function(row_num) {
+    lkup_name <- category_attrs$lookup[row_num]
+    key_col <- lookup_defs$keyColumnName[lookup_defs$lookupName == lkup_name]
+    desc_col <- lookup_defs$definitionColumnName[lookup_defs$lookupName == lkup_name]
+    categories <- dplyr::select(lookups[[lkup_name]], dplyr::all_of(c(key_col, desc_col))) %>%
+      dplyr::mutate(attributeName = category_attrs$attributeName[row_num]) %>%
+      dplyr::rename(code = key_col, definition = desc_col) %>%
+      dplyr::select(attributeName, code, definition)  # Make sure cols are in the right order
+
+    return(categories)
+  })
 
   categories_dict <- do.call(rbind, categories_dict) %>% unique()
 

@@ -8,7 +8,7 @@ writeToFiles(
   all_tables,
   data_dir = here::here("data", "final"),
   dictionary_dir = here::here("data", "dictionary"),
-  metadata_filenames = c(tables = "data_dictionary_tables.txt", attributes =
+  dictionary_filenames = c(tables = "data_dictionary_tables.txt", attributes =
     "data_dictionary_attributes.txt", categories = "data_dictionary_categories.txt"),
   lookup_dir = NA,
   verbose = FALSE
@@ -21,7 +21,11 @@ writeToFiles(
 
 \item{dictionary_dir}{Folder to store data dictionaries in}
 
+\item{dictionary_filenames}{Named list with names \code{c("tables", "attributes", "categories")} indicating what to name the tables, attributes, and categories data dictionaries. You are encouraged to keep the default names unless you have a good reason to change them.}
+
 \item{lookup_dir}{Optional folder to store lookup tables in. If left as \code{NA}, lookups won't be exported.}
+
+\item{verbose}{Output feedback to console?}
 }
 \description{
 You shouldn't need to call this function directly unless you are using it to write a data export function for another R package. If you are using this package on its own, you will usually want to call \code{fetchFromAccess(save_to_files = TRUE)}.
