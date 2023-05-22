@@ -86,7 +86,7 @@ fetchFromAccess <- function(db_path, data_prefix = "qExport", lookup_prefix = "t
   for (i in 1:nrow(metadata$MetadataLookupDefs)) {
     lkup <- metadata$MetadataLookupDefs[[i, "lookupTableName"]]
     lkup_code <- metadata$MetadataLookupDefs[[i, "lookupCodeField"]]
-    lkup_def <- metadata$MetadataLookupDefs[[i, "LookupDescriptionField"]]
+    lkup_def <- metadata$MetadataLookupDefs[[i, "lookupDescriptionField"]]
     temp <- tibble::tibble(attributeName = metadata$MetadataLookupDefs[[i, "attributeName"]],
                            code = lookups[[lkup]][[lkup_code]],
                            definition = lookups[[lkup]][[lkup_def]])
