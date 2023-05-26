@@ -1,15 +1,10 @@
 #' @title Create Data Dictionaries
 #'
-#' @description This function assumes that you are using the Access Metadata Generator in your Access databaseand using the fetch_from_access function.  This function takes the lists of data, looup, and metdata tables and performs data wrangling to get into right format for eml
+#' @description This function assumes that you are using the Access Metadata Generator in your Access database and using the fetch_from_access function.  This function takes the lists of data, lookup, and metadata tables and performs data wrangling to get into right format for eml
 #'
-#' @param db_path Path to your Access database
-#' @param data_prefix Prefix used in your Access database to indicate data export tables and/or queries
-#' @param lookup_prefix Prefix used in your Access database to indicate lookup tables
-#' @param tables_to_omit Character vector of table names that match the data
-#' @param custom_wrangler Optional - function that takes arguments `data`, `lookups`, and `metadata`. `data` and `lookups` are lists whose names and content correspond to the data and lookup tables in the database. Names do not include prefixes. `metadata` contains a tibble of field-level metadata called `MetadataAttributes`. See qsys_MetadataAttributes in the Access database for the contents of this tibble. This function should perform any necessary data wrangling specific to your dataset and return a named list containing `data`, `lookups`, and `metadata` with contents modified as needed. Do not remove or add tibbles in `data` or `lookups` and do not modify their names. If you add, remove, or rename columns in a tibble in `data`, you must modify the contents of `metadata` accordingly. Do not modify the structure or column names of `metadata`. The structure and column names of `lookups` should also be left as-is. Typically the only necessary modification to `lookups` will be to filter overly large species lists to only include taxa that appear in the data.
-#' @param save_to_files Should the function save data and data dictionaries to files on hard drive?
-#' @inheritParams writeToFiles
-#'
+#' @param data list containing data tables
+#' @param lookups list containing lookup tables
+#' @param metadata list containing metdata tables
 #' @return A nested list containing three lists of tibbles: data, lookups, and metadata.
 #' @export
 #'

@@ -14,13 +14,14 @@
 #' @export
 #'
 #'
-db_path <-"C:\\Users\\EEdson\\OneDrive - DOI\\Projects_InProgress\\SNPL\\GOGA_SNPL\\UpdatingFetchAccess\\SnowyPlovers_BE_20230522_AccessExportTool.accdb"
-custom_wrangler = wrangle_snpl
-data_prefix = "qExport"
-lookup_prefix = "tlu"
-tables_to_omit = c()
+# db_path <-"C:\\Users\\EEdson\\OneDrive - DOI\\Projects_InProgress\\SNPL\\GOGA_SNPL\\UpdatingFetchAccess\\SnowyPlovers_BE_20230522_AccessExportTool.accdb"
+# custom_wrangler = wrangle_snpl
+# data_prefix = "qExport"
+# lookup_prefix = "tlu"
+# tables_to_omit = c()
 
 fetchFromAccess <- function(db_path, data_prefix = "qExport", lookup_prefix = "tlu", tables_to_omit = c(), custom_wrangler, save_to_files = FALSE, data_dir = here::here("data", "final"), dictionary_dir = here::here("data", "dictionary")){
+
   connection <- RODBC::odbcConnectAccess2007(db_path)  # Load datasets for use. Pulls directly from Access database back end
 
   metadata_prefix <- c("tsys_", "qsys_")  # Prefixes of metadata queries/tables

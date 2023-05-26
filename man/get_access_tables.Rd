@@ -17,5 +17,5 @@ get_access_tables(db_path, data_prefix, lookup_prefix)
 A nested list containing three lists of tibbles: data, lookups, and metadata.
 }
 \description{
-This function assumes that you are using the Access Metadata Generator in your Access database, and using the fetch_from_access function. This function connects to the user designated access database and extracts the tables needed.
+This function assumes that you are using the Access Metadata Generator in your Access database, and using the fetch_from_access function. It also assumes that the user has 64bit Access, 64 bit R installed, and the database version is newer than 2007 and not password protected. It will not work with 32 bit MS Access or R.  This function connects to the user designated access database and extracts the export data, lookup, and metadata tables needed.
 }

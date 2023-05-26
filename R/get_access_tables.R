@@ -1,6 +1,6 @@
 #' @title Get Access Tables
 #'
-#' @description This function assumes that you are using the Access Metadata Generator in your Access database, and using the fetch_from_access function. This function connects to the user designated access database and extracts the tables needed.
+#' @description This function assumes that you are using the Access Metadata Generator in your Access database, and using the fetch_from_access function. It also assumes that the user has 64bit Access, 64 bit R installed, and the database version is newer than 2007 and not password protected. It will not work with 32 bit MS Access or R.  This function connects to the user designated access database and extracts the export data, lookup, and metadata tables needed.
 #'
 #' @param db_path Path to your Access database
 #' @param data_prefix Prefix used in your Access database to indicate data export tables and/or queries
@@ -8,9 +8,6 @@
 #'
 #' @return A nested list containing three lists of tibbles: data, lookups, and metadata.
 #' @export
-#' @import RODBC
-#' @import dplyr
-#' @importFrom magrittr %>%
 #'
 
 get_access_tables <- function(db_path, data_prefix, lookup_prefix){
