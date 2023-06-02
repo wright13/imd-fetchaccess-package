@@ -25,6 +25,7 @@ fetch_from_access <- function(db_path, data_prefix = "qExport", lookup_prefix = 
   #get Access tables
   tables <- get_access_tables(db_path, data_prefix,lookup_prefix)
 
+
   # Do custom data wrangling (for SNPL need to fix wrangler to use table list)
   if (!missing(custom_wrangler)) {
 
@@ -40,13 +41,24 @@ fetch_from_access <- function(db_path, data_prefix = "qExport", lookup_prefix = 
     metadata <- tables$metadata
   }
 
- #create data dictionaries
-  all_tables <-create_data_dictionaries(data, lookups, metadata)
+# test metadata tables for missing values etc. before making data dictionaries)
+  if(my_counter<-test_metadata(metadata) ==0){
 
-  if (save_to_files) {
-    writeToFiles(all_tables, data_dir, dictionary_dir)
+    #create data dictionaries
+    all_tables <-create_data_dictionaries(data, lookups, metadata)
+
+    if (save_to_files) {
+      writeToFiles(all_tables, data_dir, dictionary_dir)
+    }
+
+    return(all_tables)
+
+  } else{
+
+    print("You MUST fix these errors before proceding")
+
   }
 
-  return(all_tables)
+
 }
 
