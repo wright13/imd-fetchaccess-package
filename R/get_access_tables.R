@@ -5,12 +5,13 @@
 #' @param db_path Path to your Access database
 #' @param data_prefix Prefix used in your Access database to indicate data export tables and/or queries
 #' @param lookup_prefix Prefix used in your Access database to indicate lookup tables
+#' @param tables_to_omit a list of any tables to omit from the import
 #'
 #' @return A nested list containing three lists of tibbles: data, lookups, and metadata.
 #' @export
 #'
 
-get_access_tables <- function(db_path, data_prefix, lookup_prefix){
+get_access_tables <- function(db_path, data_prefix, lookup_prefix, tables_to_omit){
 
   # Load datasets for use. Pulls directly from Access database back end
   connection <- RODBC::odbcConnectAccess2007(db_path)
