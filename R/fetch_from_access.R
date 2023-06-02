@@ -29,7 +29,7 @@ fetch_from_access <- function(db_path, data_prefix = "qExport", lookup_prefix = 
   # Do custom data wrangling (for SNPL need to fix wrangler to use table list)
   if (!missing(custom_wrangler)) {
 
-    new_tables <- custom_wrangler(data, lookups, metadata)
+    new_tables <- custom_wrangler(tables)
     data <- new_tables$data
     lookups <- new_tables$lookups
     metadata <- new_tables$metadata
