@@ -4,7 +4,7 @@
 \alias{get_access_tables}
 \title{Get Access Tables}
 \usage{
-get_access_tables(db_path, data_prefix, lookup_prefix)
+get_access_tables(db_path, data_prefix, lookup_prefix, tables_to_omit)
 }
 \arguments{
 \item{db_path}{Path to your Access database}
@@ -12,6 +12,8 @@ get_access_tables(db_path, data_prefix, lookup_prefix)
 \item{data_prefix}{Prefix used in your Access database to indicate data export tables and/or queries}
 
 \item{lookup_prefix}{Prefix used in your Access database to indicate lookup tables}
+
+\item{tables_to_omit}{a list of any tables to omit from the import}
 }
 \value{
 A nested list containing three lists of tibbles: data, lookups, and metadata.
