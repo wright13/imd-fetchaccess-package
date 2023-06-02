@@ -23,7 +23,7 @@
 fetch_from_access <- function(db_path, data_prefix = "qExport", lookup_prefix = "tlu", tables_to_omit = c(), custom_wrangler, save_to_files = FALSE, data_dir = here::here("data", "final"), dictionary_dir = here::here("data", "dictionary")){
 
   #get Access tables
-  tables <- get_access_tables(db_path, data_prefix,lookup_prefix)
+  tables <- get_access_tables(db_path, data_prefix,lookup_prefix, tables_to_omit)
 
 
   # Do custom data wrangling (for SNPL need to fix wrangler to use table list)
