@@ -11,5 +11,10 @@ Reads data and metadata from an Access database using the metadata generator too
 \author{
 \strong{Maintainer}: Sarah Wright \email{sarah_wright@nps.gov}
 
+Other contributors:
+\itemize{
+  \item Lizzy Edson [contributor]
+}
+
 }
 \keyword{internal}

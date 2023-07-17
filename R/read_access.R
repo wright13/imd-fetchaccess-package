@@ -13,7 +13,15 @@
 #' @return A nested list containing three lists of tibbles: data, lookups, and metadata.
 #' @export
 #'
+#'
+# db_path <-"C:\\Users\\EEdson\\OneDrive - DOI\\Projects_InProgress\\SNPL\\GOGA_SNPL\\UpdatingFetchAccess\\SnowyPlovers_BE_20230522_AccessExportTool.accdb"
+# custom_wrangler = wrangle_snpl
+# data_prefix = "qExport"
+# lookup_prefix = "tlu"
+# tables_to_omit = c()
+
 fetchFromAccess <- function(db_path, data_prefix = "qExport", lookup_prefix = "tlu", tables_to_omit = c(), custom_wrangler, save_to_files = FALSE, data_dir = here::here("data", "final"), dictionary_dir = here::here("data", "dictionary")){
+
   connection <- RODBC::odbcConnectAccess2007(db_path)  # Load datasets for use. Pulls directly from Access database back end
 
   metadata_prefix <- c("tsys_", "qsys_")  # Prefixes of metadata queries/tables
@@ -35,7 +43,8 @@ fetchFromAccess <- function(db_path, data_prefix = "qExport", lookup_prefix = "t
   data <- sapply(data_tables, fetchAndTidy, connection = connection)
   names(data) <- stringr::str_remove(data_tables, paste0("(", data_prefix, ")", collapse = "|"))
   lookups <- sapply(lookup_tables, fetchAndTidy, connection = connection)
-  names(lookups) <- stringr::str_remove(lookup_tables, paste0("(", lookup_prefix, ")", collapse = "|"))
+  # don't remove the prefix as we need these
+  #names(lookups) <- stringr::str_remove(lookup_tables, paste0("(", lookup_prefix, ")", collapse = "|"))
   metadata <- sapply(metadata_tables, fetchAndTidy, connection = connection)
   names(metadata) <- stringr::str_remove(metadata_tables, paste0("(", metadata_prefix, ")", collapse = "|"))
   RODBC::odbcCloseAll()  # Close db connection
@@ -56,28 +65,30 @@ fetchFromAccess <- function(db_path, data_prefix = "qExport", lookup_prefix = "t
     dplyr::select(tableName, fileName, tableDescription)
 
   # Fields dictionary
-  fields_dict <- metadata$MetadataAttributes %>%
+  fields_dict <- metadata$EDIT_metadataAttributeInfo %>%
     dplyr::mutate(tableName = stringr::str_remove(tableName, "qExport"),
-                  class = dplyr::case_when(class %in% c("Short Text", "Long Text", "Memo", "Text", "Yes/No", "Hyperlink") ~ "character",
-                                    class %in% c("Number", "Large Number", "Byte", "Integer", "Long Integer", "Single", "Double", "Replication ID", "Decimal", "AutoNumber", "Currency") ~ "numeric",
-                                    class %in% c("Date/Time", "Date/Time Extended") ~ "Date",
+                  class = dplyr::case_when(readonlyClass %in% c("Short Text", "Long Text", "Memo", "Text", "Yes/No", "Hyperlink") ~ "character",
+                                           readonlyClass %in% c("Number", "Large Number", "Byte", "Integer", "Long Integer", "Single", "Double", "Replication ID", "Decimal", "AutoNumber", "Currency") ~ "numeric",
+                                           readonlyClass == "Categorical" ~ "categorical",
+                                           readonlyClass %in% c("Date/Time", "Date/Time Extended") ~ "Date",
                                     TRUE ~ "unknown")) %>%
-    dplyr::select(tableName, attributeName, attributeDefinition, class, unit, dateTimeFormatString, missingValueCode, missingValueCodeExplanation, sourceField, sourceTable)
+    dplyr::select(tableName, attributeName, "attributeDefinition" = readonlyDescription , class, unit, dateTimeFormatString, missingValueCode, missingValueCodeExplanation)
 
   # Categories dictionary
-  lookup_fields <- metadata$MetadataRelationFields %>%
-    dplyr::filter(tableName %in% fields_dict$sourceTable & foreignKeyName %in% fields_dict$sourceField & !is.na(foreignDescriptionName)) %>%
-    dplyr::inner_join(fields_dict, by = c("tableName" = "sourceTable", "foreignKeyName" = "sourceField")) %>%
-    dplyr::select(attributeName, lookupName, lookupAttributeName) %>%
-    dplyr::inner_join(metadata$editMetadataLookupDefs, by = "lookupName") %>%
-    unique()
+  # lookup_fields <- metadata$MetadataRelationFields %>%
+  #   dplyr::filter(tableName %in% fields_dict$sourceTable & foreignKeyName %in% fields_dict$sourceField & !is.na(foreignDescriptionName)) %>%
+  #   dplyr::inner_join(fields_dict, by = c("tableName" = "sourceTable", "foreignKeyName" = "sourceField")) %>%
+  #   dplyr::select(attributeName, lookupName, lookupAttributeName) %>%
+  #   dplyr::inner_join(metadata$editMetadataLookupDefs, by = "lookupName") %>%
+  #   unique()
+  #lookup_fields <-metadata$MetadataLookupDefs
 
   categories_dict <- tibble::tibble()
-  for (i in 1:nrow(lookup_fields)) {
-    lkup <- stringr::str_remove(lookup_fields[[i, "lookupName"]], "tlu")
-    lkup_code <- lookup_fields[[i, "lookupAttributeName"]]
-    lkup_def <- lookup_fields[[i, "definitionColumnName"]]
-    temp <- tibble::tibble(attributeName = lookup_fields[[i, "attributeName"]],
+  for (i in 1:nrow(metadata$MetadataLookupDefs)) {
+    lkup <- metadata$MetadataLookupDefs[[i, "lookupTableName"]]
+    lkup_code <- metadata$MetadataLookupDefs[[i, "lookupCodeField"]]
+    lkup_def <- metadata$MetadataLookupDefs[[i, "lookupDescriptionField"]]
+    temp <- tibble::tibble(attributeName = metadata$MetadataLookupDefs[[i, "attributeName"]],
                            code = lookups[[lkup]][[lkup_code]],
                            definition = lookups[[lkup]][[lkup_def]])
     categories_dict <- dplyr::bind_rows(categories_dict, temp)
@@ -96,6 +107,8 @@ fetchFromAccess <- function(db_path, data_prefix = "qExport", lookup_prefix = "t
 
   return(all_tables)
 }
+
+
 
 #' Write data and data dictionaries to files
 #'
