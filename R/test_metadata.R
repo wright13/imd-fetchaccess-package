@@ -13,34 +13,34 @@ test_metadata<- function(metadata){
   counter<- as.numeric(0)
 
   if(sum(is.na(metadata$MetadataQueries$tableDescription)) >0){
-    print("WARNING!! Not all export tables have a TABLE DESCRIPTION.")
-    print("  You can fix this in the Access database by making sure the export queries have a descrpition entered into their object properties.")
+    cli::cli_alert_danger("WARNING!! Not all export tables have a TABLE DESCRIPTION.")
+    cli::cli_alert_info("  You can fix this in the Access database by making sure the export queries have a descrpition entered into their object properties.")
     counter <- counter +1
   }
 
   if(sum(is.na(metadata$EDIT_metadataAttributeInfo$readonlyClass)) >0){
-    print("WARNING!! Not all field attributes have a CLASS.")
-    print("  You can fix this in the Access database by making sure the field readonlyClass in tsys_EDIT_metadataAttributeInfo does not have any missing values.")
+    cli::cli_alert_danger("WARNING!! Not all field attributes have a CLASS.")
+    cli::cli_alert_info("  You can fix this in the Access database by making sure the field readonlyClass in tsys_EDIT_metadataAttributeInfo does not have any missing values.")
     counter <- counter +1
   }
 
   if(sum(is.na(metadata$EDIT_metadataAttributeInfo$readonlyDescription)) >0){
-    print("WARNING!! Not all field attributes have a DESCRIPTION.")
-    print("  You can fix this in the Access database by making sure the field readonlyDescription in tsys_EDIT_metadataAttributeInfo does not have any missing values.")
+    cli::cli_alert_danger("WARNING!! Not all field attributes have a DESCRIPTION.")
+    cli::cli_alert_info("  You can fix this in the Access database by making sure the field readonlyDescription in tsys_EDIT_metadataAttributeInfo does not have any missing values.")
     counter <- counter +1
   }
 
   if(sum(is.na(metadata$MetadataLookupDefs$lookupCodeField)) >0){
-    print("WARNING!! Not all used lookup tables have their CODE FIELD specified.")
-    print("  You can fix this in the Access database by making sure the field lookupCodeField in tsys_EDIT_metadataSourceFields is filled in correctly for every categorical field.")
-    print("  You then need to delete the table tsys_MetadataLookUpDefs and click the CreateMetadata button again")
+    cli::cli_alert_danger("WARNING!! Not all used lookup tables have their CODE FIELD specified.")
+    cli::cli_alert_info("  You can fix this in the Access database by making sure the field lookupCodeField in tsys_EDIT_metadataSourceFields is filled in correctly for every categorical field.")
+    cli::cli_alert_info("  You then need to delete the table tsys_MetadataLookUpDefs and click the CreateMetadata button again")
     counter <- counter +1
   }
 
-  if(sum(is.na(metadata$MetadataLookupDefs$lookupDescriptionField)) >0){
-    print("WARNING!! Not all used lookup tables have their DESCRIPTION FIELD specified.")
-    print("  You can fix this in the Access database by making sure the field lookupDescriptionField in tsys_EDIT_metadataSourceFields is filled in correctly for every categorical field.")
-    print("  You then need to delete the table tsys_MetadataLookUpDefs and click the CreateMetadata button again")
+  if(sum(is.na(metadata$MetadataLookupDefs$LookupDescriptionField)) >0){
+    cli::cli_alert_danger("WARNING!! Not all used lookup tables have their DESCRIPTION FIELD specified.")
+    cli::cli_alert_info("  You can fix this in the Access database by making sure the field lookupDescriptionField in tsys_EDIT_metadataSourceFields is filled in correctly for every categorical field.")
+    cli::cli_alert_info("  You then need to delete the table tsys_MetadataLookUpDefs and click the CreateMetadata button again")
     counter <- counter +1
   }
 

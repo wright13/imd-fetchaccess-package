@@ -55,10 +55,9 @@ fetch_from_access <- function(db_path, data_prefix = "qExport", lookup_prefix = 
 
   } else{
 
-    print("You MUST fix these errors before proceding")
-
+    cli::cli_abort(c(
+      "!" = "You MUST fix these errors before proceeding"))
   }
-
 
 }
 

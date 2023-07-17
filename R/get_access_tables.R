@@ -13,9 +13,18 @@
 
 get_access_tables <- function(db_path, data_prefix, lookup_prefix, tables_to_omit){
 
-  # Load datasets for use. Pulls directly from Access database back end
-  connection <- RODBC::odbcConnectAccess2007(db_path)
+  # Checks that the database path is valid
+  if(file.exists(db_path)){
+    # opens DB connection
+    connection <- RODBC::odbcConnectAccess2007(db_path)
+  } else{
+    cli::cli_abort(c(
+      x = "Failed to find database at '{db_path}'.",
+      "!" = "Please make sure that the file exists in the folder",
+      "!" = "and/or that the variable for the database name has exactly the same spelling as the file."))
+    }
 
+  # Load datasets for use. Pulls directly from Access database back end-
   metadata_prefix <- c("tsys_", "qsys_")  # Prefixes of metadata queries/tables
   data_search_string <- paste0("(^", data_prefix, ".*)", collapse = "|")  # Regex to match data table names
   lookup_search_string <- paste0("(^", lookup_prefix, ".*)", collapse = "|")  # Regex to match lookup table names
