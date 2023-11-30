@@ -103,23 +103,65 @@ fetchFromAccess <- function(db_path,
     stop(msg)
   }
 
-  categories_dict <- lapply(1:nrow(category_attrs), function(row_num) {
-    lkup_name <- category_attrs$lookup[row_num]
-    key_col <- lookup_defs$keyColumnName[lookup_defs$lookupName == lkup_name]
-    desc_col <- lookup_defs$definitionColumnName[lookup_defs$lookupName == lkup_name]
-    categories <- dplyr::select(lookups[[lkup_name]], dplyr::all_of(c(key_col, desc_col))) %>%
-      dplyr::mutate(attributeName = category_attrs$attributeName[row_num]) %>%
-      dplyr::rename(code = key_col, definition = desc_col) %>%
-      dplyr::select(attributeName, code, definition)  # Make sure cols are in the right order
+  if (nrow(category_attrs) > 0) {
+    categories_dict <- lapply(1:nrow(category_attrs), function(row_num) {
+      lkup_name <- category_attrs$lookup[row_num]
+      key_col <- lookup_defs$keyColumnName[lookup_defs$lookupName == lkup_name]
+      desc_col <- lookup_defs$definitionColumnName[lookup_defs$lookupName == lkup_name]
+      categories <- dplyr::select(lookups[[lkup_name]], dplyr::all_of(c(key_col, desc_col))) %>%
+        dplyr::mutate(attributeName = category_attrs$attributeName[row_num]) %>%
+        dplyr::rename(code = key_col, definition = desc_col) %>%
+        dplyr::select(attributeName, code, definition)  # Make sure cols are in the right order
 
-    return(categories)
-  })
-
-  categories_dict <- do.call(rbind, categories_dict) %>% unique()
+      return(categories)
+    })
+    categories_dict <- do.call(rbind, categories_dict) %>% unique()
+  } else {
+    warning("No categorical variables (columns associated with a lookup table) found. Make sure that you have filled in all the lookup and attribute info in the Access tool.")
+    categories_dict <- tibble::tibble(attributeName = character(0), code = character(0), definition = character(0))  # make empty tibble if no categories info exists
+  }
 
   if (add_r_classes) {
     fields_dict <- getRClass(fields_dict, data)
   }
+
+  # Set correct column types based on metadata
+  # Create column type spec
+  col_spec <- fetchaccess::makeColSpec(fields_dict)
+  data <- sapply(names(data), function(tbl_name) {
+    col_types <- col_spec[[tbl_name]]
+    int_cols <- names(col_types)[col_types == "i"]
+    char_cols <- names(col_types)[col_types == "c"]
+    num_cols <- names(col_types)[col_types == "n"]
+    double_cols <- names(col_types)[col_types == "d"]
+    logical_cols <- names(col_types)[col_types == "l"]
+    factor_cols <- names(col_types)[col_types == "f"]
+    date_cols <- names(col_types)[col_types == "D"]
+    datetime_cols <- names(col_types)[col_types == "T"]
+    time_cols <- names(col_types)[col_types == "t"]
+
+    tbl <- data[[tbl_name]]
+    tbl <- dplyr::mutate(tbl, dplyr::across(int_cols, as.integer),
+                         dplyr::across(char_cols, as.character),
+                         dplyr::across(num_cols, as.numeric),
+                         dplyr::across(double_cols, as.double),
+                         dplyr::across(logical_cols, as.logical),
+                         dplyr::across(factor_cols, as.factor))
+
+    # Change this to an apply fxn eventually
+    for (col in c(date_cols, datetime_cols, time_cols)) {
+      format_string <- fields_dict$dateTimeFormatString[fields_dict$tableName == tbl_name & fields_dict$attributeName == col]
+      if (!is.na(format_string)) {
+        tbl <- tbl %>%
+          dplyr::mutate(across(dplyr::where(is.character) & dplyr::all_of(col), ~ifelse(is.character(.x), QCkit::fix_utc_offset(.x), .x))) %>%
+          dplyr::mutate(across(col, ~as.POSIXct(.x, format = QCkit::convert_datetime_format(format_string, convert_z = TRUE))))
+      } else {
+        stop(paste("No datetime format provided for column", col, "in table", tbl_name))
+      }
+    }
+
+    return(tbl)
+  }, simplify = FALSE, USE.NAMES = TRUE)
 
   # Put everything in a list
   all_tables <- list(data = data,
@@ -158,6 +200,7 @@ writeToFiles <- function(all_tables, data_dir = here::here("data", "final"), dic
   tables_dict <- all_tables$metadata$tables
   fields_dict <- all_tables$metadata$fields
   categories_dict <- all_tables$metadata$categories
+  col_spec <- makeColSpec(fields_dict)
 
   # Write data to csv
   if (!dir.exists(data_dir)) {
@@ -166,7 +209,22 @@ writeToFiles <- function(all_tables, data_dir = here::here("data", "final"), dic
   if (verbose) {message(paste0("Writing data to ", data_dir, "..."))}
   lapply(names(data), function(tbl_name) {
     if (verbose) {message(paste0("\t\t", tbl_name, ".csv"))}
-    readr::write_csv(data[[tbl_name]],
+    tbl <- data[[tbl_name]]
+    # Convert dates & times back to character before writing so that they stay in correct format
+    col_types <- col_spec[[tbl_name]]
+    date_cols <- names(col_types)[col_types == "D"]
+    datetime_cols <- names(col_types)[col_types == "T"]
+    time_cols <- names(col_types)[col_types == "t"]
+    for (col in c(date_cols, datetime_cols, time_cols)) {
+      format_string <- fields_dict$dateTimeFormatString[fields_dict$tableName == tbl_name & fields_dict$attributeName == col]
+      if (is.na(format_string)) {
+        warning(paste("No datetime format provided for column", col, "in table", tbl_name))
+        format_string <- "YYYY-MM-DDThh:mm:ss"  # Default to ISO format
+      }
+      tbl <- tbl %>%
+        dplyr::mutate(across(col, ~format(.x, format = QCkit::convert_datetime_format(format_string, convert_z = FALSE))))
+    }
+    readr::write_csv(tbl,
                      here::here(data_dir, paste0(tbl_name, ".csv")),
                      na = "")
   })
