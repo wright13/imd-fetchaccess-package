@@ -148,13 +148,16 @@ fetchFromAccess <- function(db_path,
                          dplyr::across(logical_cols, as.logical),
                          dplyr::across(factor_cols, as.factor))
 
+    # Format dates and times
     # Change this to an apply fxn eventually
     for (col in c(date_cols, datetime_cols, time_cols)) {
       format_string <- fields_dict$dateTimeFormatString[fields_dict$tableName == tbl_name & fields_dict$attributeName == col]
       if (!is.na(format_string)) {
+        format <- QCkit::convert_datetime_format(format_string, convert_z = TRUE)
         tbl <- tbl %>%
-          dplyr::mutate(across(dplyr::where(is.character) & dplyr::all_of(col), ~ifelse(is.character(.x), QCkit::fix_utc_offset(.x), .x))) %>%
-          dplyr::mutate(across(col, ~as.POSIXct(.x, format = QCkit::convert_datetime_format(format_string, convert_z = TRUE))))
+          dplyr::mutate(dplyr::across(col, ~ as.POSIXct(.x, format = format))) %>%
+          dplyr::mutate(dplyr::across(col, ~ if(all(lubridate::date(.x) == "1899-12-30", na.rm = TRUE)) {hms::as_hms(.x)} else {.x})) %>%
+          dplyr::mutate(dplyr::across(col, ~ if(all(hms::as_hms(.x) == hms::as_hms("00:00:00"), na.rm = TRUE)) {lubridate::as_date(.x)} else {.x}))
       } else {
         stop(paste("No datetime format provided for column", col, "in table", tbl_name))
       }
@@ -218,8 +221,7 @@ writeToFiles <- function(all_tables, data_dir = here::here("data", "final"), dic
     for (col in c(date_cols, datetime_cols, time_cols)) {
       format_string <- fields_dict$dateTimeFormatString[fields_dict$tableName == tbl_name & fields_dict$attributeName == col]
       if (is.na(format_string)) {
-        warning(paste("No datetime format provided for column", col, "in table", tbl_name))
-        format_string <- "YYYY-MM-DDThh:mm:ss"  # Default to ISO format
+        stop(paste("No datetime format provided for column", col, "in table", tbl_name))
       }
       tbl <- tbl %>%
         dplyr::mutate(across(col, ~format(.x, format = QCkit::convert_datetime_format(format_string, convert_z = FALSE))))
