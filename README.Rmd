@@ -1,7 +1,7 @@
 ---
 title: "Access/R Data Dictionary Creator"
 author: "Sarah Wright"
-date: '2022-07-26'
+date: '2023-12-18'
 output: 
   html_document: default
   github_document:
@@ -86,19 +86,10 @@ Ultimately, this table will allow codes and/or ID's in your exported data to be 
 This table contains metadata on the columns of your exported data. EML refers to data columns as "attributes", so we'll use that term here. "Columns" will refer to the columns of the metadata tables you see in this Access tool. This metadata has been populated for you where it can be automated, but there is some information you will need to provide manually.
 
   1. Go to the **Add Attribute Info** tab in **frmMakeDataDict**. The first four columns (**tableName**, **attributeName**, **attributeDefinition**, and **class**) should be fully populated with information about each attribute in each export query. Do not modify or delete any of the data in these columns.
-  2. Populate the **unit** column. Leave it blank for non-numeric attributes (text, Yes/No, and Date/Time). For all numeric attributes, including AutoNumber, you must enter a valid EML unit. Enter "dimensionless" for unitless quantities. See below for a full list of valid EML units (*use the value in the ID column*) [Note: download README.html to see the list; it does not render properly on GitHub]. 
-      - If your unit is not present in the list below, enter it anyway. Make sure that it contains no spaces or special characters and that you enter it consistently each time. You will record this as a custom unit later, in the EML generation section of the Data Release Report.
+  2. Populate the **unit** column from the dropdown list. Leave it blank for non-numeric attributes (text, Yes/No, and Date/Time). For all numeric attributes, including AutoNumber, you must enter a valid EML unit. Enter "dimensionless" for unitless quantities. See the [EML schema](https://eml.ecoinformatics.org/schema/eml-unittypedefinitions_xsd) for a full list of defined EML units. 
+      - If your unit is not present in the dropdown list, enter it anyway. Make sure that it contains no spaces or special characters and that you enter it consistently each time. You will record this as a custom unit later, in the EML generation section of the Data Release Report.
   3. Populate the **missingValueCode** and **missingValueCodeExplanation** columns. You only need to fill these in for attributes that use codes instead of or in addition to blanks to indicate missing data (e.g. -999, "ND"). 
   4. Populate the **lookup** column for attributes whose values come from a lookup table. For all other attributes, leave it blank. The dropdown should show all of the lookup tables found in the **Add Lookup Info** tab. If you had to add or delete lookups, you may need to close **frmMakeDataDict** and reopen it before they will appear in the dropdown.
-  5. (Optional at this stage) Populate the **dateTimeFormatString** column. Depending on what data wrangling you do in R, you may wish to populate this column in R instead.
+  5. Populate the **dateTimeFormatString** column for any Date/Time attributes. Choose the format that you would like the data to be displayed and saved in. It is *strongly* recommended that you choose [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) formatting for your dates and times. Unfortunately, MS Access does not store time zone information. If your data includes times, you may want to add a column to your data table that indicates the time zone using UTC offset or [tz database time zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
 
 You are all done in Access! Now you can use this R package to read your data and metadata into R.
-
-```{r eml_units, echo=FALSE}
-units <- EML::get_unitList()$units
-units %>%
-  dplyr::select(id, unitType, description, abbreviation) %>%
-  DT::datatable()
-```
-  
-  
