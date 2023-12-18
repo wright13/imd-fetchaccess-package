@@ -29,10 +29,6 @@ For `fetchFromAccess()` to work, you must first complete the following steps to 
 
 # Setting up your Access database
 
-## Ensure relationships are up to date
-
-This tool relies on table relationships being set up correctly. In your Access database, go to **Database Tools** -> **Relationships** and verify that table relationships exist (*including lookup tables*) and are correct. 
-
 ## Create data export queries in your protocol database
 
 ![Screenshot of export query list in Access, using 'qExport' as the prefix](instructionFigures/ExportQueries.PNG)
@@ -52,10 +48,12 @@ getTemplateDatabase(destination_folder)
 
 ![Screenshot of objects to be copied from template to working database](instructionFigures/CopyObjects.PNG)
 
-There are four objects that must be copied from the template database to your protocol database:
+There are six objects that must be copied from the template database to your protocol database:
 
-  - qsysMetadataAttributes (query)
+  - tsys_Units (table)
   - frmMakeDataDict (form)
+  - frmEditLookupInfo (form)
+  - frmEditAttributeInfo (form)
   - AutoExec (macro)
   - mod_DocumentationTools (module)
   
@@ -65,32 +63,37 @@ You are now done with the template database, although it is a good idea to save 
 
 ## Fill in some information manually
 
-In the navigation pane of your protocol database, double click on **frmMakeDataDict**. In the form that opens, enter the prefixes of your data export queries and lookup tables. You can change the default values of these fields if you would like.
+In the navigation pane of your protocol database, double click on **frmMakeDataDict**. The form should open to the **Start Here** tab. If not, navigate to it. Enter the prefixes of your data export queries and lookup tables. You can change the default values of these fields if you would like.
 
 Click on **Create Metadata**. This will generate some metadata automatically, but for it to create an EML-compatible data dictionary, you will need to fill in some information manually. The good news is that you only need to do this once (but remember to update it if you make changes to your database).
 
-You should see two tables that begin with "tsys_editMetadata": **tsys_editMetadataLookupDefs** and **tsys_editMetadataAttributeInfo**.
+You should see two other tabs called **Add Lookup Info** and **Add Column Info**.
 
-### Populating tsys_editMetadataLookupDefs
+### Adding lookup info
 
 Ultimately, this table will allow codes and/or ID's in your exported data to be mapped to their definitions.
 
-  1. Double click on **tsys_editMetadataLookupDefs** to open it. If everything has gone well up to this point, then the **lookupName** column should be populated with the names of the lookup tables in your database. 
-  2. It may be the case that some of these lookup tables aren't referenced in the exported dataset, or the codes are self-explanatory (e.g. "yes/no"). Delete these rows from **tsys_editMetadataLookupDefs**.
-  3. There may be tables that you are using as lookups but aren't named accordingly (e.g. "tbl_Sites"). Add the names of these tables to the **lookupName** column.
-  4. For each lookup table in the **lookupName** column, determine which column clearly defines the meaning of the code or ID. Enter the name of that column under **definitionColumnName**.
-  5. Save and close **tsys_editMetadataLookupDefs**. You are now done with this table! Just remember to update it if you create or delete a lookup table in the future (or change the definition column name of an existing lookup).
+  1. Go to the **Add Lookup Info** tab in **frmMakeDataDict**. If everything has gone well up to this point, then the **lookupName** column should be populated with the names of the lookup tables in your database.
+  2. It may be the case that some of these lookup tables aren't used in the export queries, or the codes are self-explanatory (e.g. "yes/no"). You can delete these rows or skip over them.
+  3. There may be tables that you are using as lookups but aren't named accordingly (e.g. "tbl_Sites"). Add rows for these tables.
+  4. For each lookup table in the **lookupName** column:
+     - determine which column of the lookup contains the values that appear in the export query (usually a primary key or code). Enter the name of that column under **keyColumnName**.
+     - determine which column of the lookup clearly defines the meaning of the code or ID. Enter the name of that column under **definitionColumnName**.
+  5. You are done adding lookup table info! Just remember to update it if you modify, create, or delete a lookup table in the future.
 
-### Populating tsys_editMetadataAttributeInfo
+### Adding attribute info
 
-This table contains metadata on the columns of your exported data. This metadata has been populated for you where it can be automated, but there is some information you will need to provide manually.
+This table contains metadata on the columns of your exported data. EML refers to data columns as "attributes", so we'll use that term here. "Columns" will refer to the columns of the metadata tables you see in this Access tool. This metadata has been populated for you where it can be automated, but there is some information you will need to provide manually.
 
-  1. Open **tsys_editMetadataAttributeInfo**. The first four columns (**tableName**, **attributeName**, **readonlyDescription**, and **readonlyClass**) should be fully populated with information about each column in each export query. Do not modify or delete any of the data in these columns.
-  2. Populate the **unit** column. Leave it blank for non-numeric fields (text, Yes/No, and Date/Time). For all numeric fields, including AutoNumber, you must enter a valid EML unit. Enter "dimensionless" for unitless quantities. See below for a full list of valid EML units (*use the value in the ID column*) [Note: download README.html to see the list; it does not render properly on GitHub]. 
+  1. Go to the **Add Attribute Info** tab in **frmMakeDataDict**. The first four columns (**tableName**, **attributeName**, **attributeDefinition**, and **class**) should be fully populated with information about each attribute in each export query. Do not modify or delete any of the data in these columns.
+  2. Populate the **unit** column. Leave it blank for non-numeric attributes (text, Yes/No, and Date/Time). For all numeric attributes, including AutoNumber, you must enter a valid EML unit. Enter "dimensionless" for unitless quantities. See below for a full list of valid EML units (*use the value in the ID column*) [Note: download README.html to see the list; it does not render properly on GitHub]. 
       - If your unit is not present in the list below, enter it anyway. Make sure that it contains no spaces or special characters and that you enter it consistently each time. You will record this as a custom unit later, in the EML generation section of the Data Release Report.
-  3. Populate the **missingValueCode** and **missingValueCodeExplanation** columns. You only need to fill these in for columns that use codes instead of or in addition to blanks to indicate missing data (e.g. -999, "ND"). 
-  4. (Optional at this stage) Populate the **dateTimeFormatString** column. Depending on what data wrangling you do in R, you may wish to populate this column in R instead.
-  
+  3. Populate the **missingValueCode** and **missingValueCodeExplanation** columns. You only need to fill these in for attributes that use codes instead of or in addition to blanks to indicate missing data (e.g. -999, "ND"). 
+  4. Populate the **lookup** column for attributes whose values come from a lookup table. For all other attributes, leave it blank. The dropdown should show all of the lookup tables found in the **Add Lookup Info** tab. If you had to add or delete lookups, you may need to close **frmMakeDataDict** and reopen it before they will appear in the dropdown.
+  5. (Optional at this stage) Populate the **dateTimeFormatString** column. Depending on what data wrangling you do in R, you may wish to populate this column in R instead.
+
+You are all done in Access! Now you can use this R package to read your data and metadata into R.
+
 ```{r eml_units, echo=FALSE}
 units <- EML::get_unitList()$units
 units %>%

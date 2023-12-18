@@ -3,4 +3,6 @@
 export("%>%")
 export(fetchFromAccess)
 export(getTemplateDatabase)
+export(makeColSpec)
+export(writeToFiles)
 importFrom(magrittr,"%>%")

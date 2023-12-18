@@ -8,13 +8,15 @@ Description: Reads data and metadata from an Access database using the metadata 
 License: CC0
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 Imports: 
     dplyr,
     here,
+    hms,
     magrittr,
     readr,
     RODBC,
     stringr,
     tibble,
     utf8
+Roxygen: list(markdown = TRUE)
