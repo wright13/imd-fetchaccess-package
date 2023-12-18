@@ -44,7 +44,7 @@ fetchFromAccess <- function(db_path,
   names(data) <- stringr::str_remove(data_tables, paste0("(", data_prefix, ")", collapse = "|"))
   lookups <- sapply(lookup_tables, fetchAndTidy, connection = connection, as.is = as.is)
   names(lookups) <- stringr::str_remove(lookup_tables, paste0("(", lookup_prefix, ")", collapse = "|"))
-  metadata <- sapply(metadata_tables, fetchAndTidy, connection = connection, as.is = as.is)
+  metadata <- sapply(metadata_tables, fetchAndTidy, connection = connection, as.is = TRUE)
   names(metadata) <- stringr::str_remove(metadata_tables, paste0("(", metadata_prefix, ")", collapse = "|"))
   RODBC::odbcCloseAll()  # Close db connection
 
@@ -156,8 +156,8 @@ fetchFromAccess <- function(db_path,
         format <- QCkit::convert_datetime_format(format_string, convert_z = TRUE)
         tbl <- tbl %>%
           dplyr::mutate(dplyr::across(col, ~ as.POSIXct(.x, format = format))) %>%
-          dplyr::mutate(dplyr::across(col, ~ if(all(lubridate::date(.x) == "1899-12-30", na.rm = TRUE)) {hms::as_hms(.x)} else {.x})) %>%
-          dplyr::mutate(dplyr::across(col, ~ if(all(hms::as_hms(.x) == hms::as_hms("00:00:00"), na.rm = TRUE)) {lubridate::as_date(.x)} else {.x}))
+          dplyr::mutate(dplyr::across(col, ~ if(!grepl("[Yy]|M|[Dd]", format_string)) {hms::as_hms(.x)} else {.x})) %>%
+          dplyr::mutate(dplyr::across(col, ~ if(!grepl("[Hh].*m.*s*", format_string)) {lubridate::as_date(.x)} else {.x}))
       } else {
         stop(paste("No datetime format provided for column", col, "in table", tbl_name))
       }
@@ -165,6 +165,11 @@ fetchFromAccess <- function(db_path,
 
     return(tbl)
   }, simplify = FALSE, USE.NAMES = TRUE)
+
+  # Do this again to update column classes after fixing dates and times
+  if (add_r_classes) {
+    fields_dict <- getRClass(fields_dict, data)
+  }
 
   # Put everything in a list
   all_tables <- list(data = data,
@@ -291,6 +296,8 @@ getRClass <- function(fields, data) {
     fields[fields$tableName == table_name, "rClass"] <<- types[fields[fields$tableName == table_name,]$attributeName]
   })
 
+  names(fields$rClass) <- NULL  # get rid of nonexistent names for this vector
+
   return(fields)
 }
 
@@ -312,6 +319,8 @@ makeColSpec <- function(fields) {
                                                rClass == "Date" ~ "D",
                                                rClass == "POSIXct" ~ "T",
                                                rClass == "POSIXlt" ~ "T",
+                                               rClass == "hms" ~ "t",
+                                               rClass == "difftime" ~ "t",
                                                rClass == "factor" ~ "f",
                                                TRUE ~ "?")) %>%
     split(~tableName)
