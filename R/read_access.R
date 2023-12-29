@@ -66,11 +66,12 @@ fetchFromAccess <- function(db_path,
   # Fields dictionary
   fields_dict <- metadata$editMetadataAttributeInfo %>%
     dplyr::mutate(tableName = stringr::str_remove(tableName, paste0("(", data_prefix, ")", collapse = "|")),
-                  class = dplyr::case_when(class %in% c("Short Text", "Long Text", "Memo", "Text", "Yes/No", "Hyperlink") ~ "character",
-                                    class %in% c("Number", "Large Number", "Byte", "Integer", "Long Integer", "Single", "Double", "Replication ID", "Decimal", "AutoNumber", "Currency") ~ "numeric",
-                                    class %in% c("Date/Time", "Date/Time Extended") ~ "Date",
-                                    !is.na(lookup) ~ "categorical",
-                                    TRUE ~ "unknown"),
+                  class = dplyr::case_when(
+                    !is.na(lookup) ~ "categorical",
+                    class %in% c("Short Text", "Long Text", "Memo", "Text", "Yes/No", "Hyperlink") ~ "character",
+                    class %in% c("Number", "Large Number", "Byte", "Integer", "Long Integer", "Single", "Double", "Replication ID", "Decimal", "AutoNumber", "Currency") ~ "numeric",
+                    class %in% c("Date/Time", "Date/Time Extended") ~ "Date",
+                    TRUE ~ "unknown"),
                   lookup = stringr::str_remove(lookup, paste0("(", lookup_prefix, ")", collapse = "|"))) %>%
     dplyr::select(tableName, attributeName, attributeDefinition, class, unit, dateTimeFormatString, missingValueCode, missingValueCodeExplanation, lookup)
 
