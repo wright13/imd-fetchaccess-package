@@ -68,7 +68,7 @@ fetchFromAccess <- function(db_path,
     dplyr::mutate(tableName = stringr::str_remove(tableName, paste0("(", data_prefix, ")", collapse = "|")),
                   class = dplyr::case_when(
                     !is.na(lookup) ~ "categorical",
-                    class %in% c("Short Text", "Long Text", "Memo", "Text", "Yes/No", "Hyperlink") ~ "character",
+                    class %in% c("Short Text", "Long Text", "Memo", "Text", "Yes/No", "Hyperlink", "GUID") ~ "character",
                     class %in% c("Number", "Large Number", "Byte", "Integer", "Long Integer", "Single", "Double", "Replication ID", "Decimal", "AutoNumber", "Currency") ~ "numeric",
                     class %in% c("Date/Time", "Date/Time Extended") ~ "Date",
                     TRUE ~ "unknown"),
