@@ -273,7 +273,7 @@ writeToFiles <- function(all_tables, data_dir = here::here("data", "final"), dic
 #' @return A tibble of tidy data
 #'
 fetchAndTidy <- function(tbl_name, connection, as.is) {
-  tidy_data <- tibble::as_tibble(RODBC::sqlFetch(connection, tbl_name, as.is = as.is, stringsAsFactors = FALSE)) %>%
+  tidy_data <- tibble::as_tibble(RODBC::sqlFetch(connection, tbl_name, as.is = as.is, stringsAsFactors = FALSE, na.strings = "")) %>%
     dplyr::mutate(dplyr::across(where(is.character), function(x) {
       x %>%
         utf8::utf8_encode() %>%  # Encode text as UTF-8 - this prevents a lot of parsing issues in R
