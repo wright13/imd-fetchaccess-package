@@ -1,0 +1,9 @@
+pandoc: 3.1.11
+pkgdown: 2.0.9
+pkgdown_sha: ~
+articles: {}
+last_built: 2024-05-16T18:28Z
+urls:
+  reference: https://wright13.github.io/imd-fetchaccess-package/reference
+  article: https://wright13.github.io/imd-fetchaccess-package/articles
+
