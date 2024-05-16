@@ -8,15 +8,20 @@ Description: Reads data and metadata from an Access database using the metadata 
 License: CC0
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Imports: 
     dplyr,
     here,
     hms,
+    lubridate,
     magrittr,
+    QCkit (>= 0.1.7),
     readr,
     RODBC,
     stringr,
     tibble,
     utf8
 Roxygen: list(markdown = TRUE)
+URL: https://wright13.github.io/imd-fetchaccess-package/
+Remotes: 
+    nationalparkservice/QCkit

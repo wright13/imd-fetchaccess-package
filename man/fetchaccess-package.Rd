@@ -8,6 +8,13 @@
 \description{
 Reads data and metadata from an Access database using the metadata generator tool.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://wright13.github.io/imd-fetchaccess-package/}
+}
+
+}
 \author{
 \strong{Maintainer}: Sarah Wright \email{sarah_wright@nps.gov}
 

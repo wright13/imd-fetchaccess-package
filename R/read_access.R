@@ -66,10 +66,12 @@ fetchFromAccess <- function(db_path,
   # Fields dictionary
   fields_dict <- metadata$editMetadataAttributeInfo %>%
     dplyr::mutate(tableName = stringr::str_remove(tableName, paste0("(", data_prefix, ")", collapse = "|")),
-                  class = dplyr::case_when(class %in% c("Short Text", "Long Text", "Memo", "Text", "Yes/No", "Hyperlink") ~ "character",
-                                    class %in% c("Number", "Large Number", "Byte", "Integer", "Long Integer", "Single", "Double", "Replication ID", "Decimal", "AutoNumber", "Currency") ~ "numeric",
-                                    class %in% c("Date/Time", "Date/Time Extended") ~ "Date",
-                                    TRUE ~ "unknown"),
+                  class = dplyr::case_when(
+                    !is.na(lookup) ~ "categorical",
+                    class %in% c("Short Text", "Long Text", "Memo", "Text", "Yes/No", "Hyperlink", "GUID") ~ "character",
+                    class %in% c("Number", "Large Number", "Byte", "Integer", "Long Integer", "Single", "Double", "Replication ID", "Decimal", "AutoNumber", "Currency") ~ "numeric",
+                    class %in% c("Date/Time", "Date/Time Extended") ~ "Date",
+                    TRUE ~ "unknown"),
                   lookup = stringr::str_remove(lookup, paste0("(", lookup_prefix, ")", collapse = "|"))) %>%
     dplyr::select(tableName, attributeName, attributeDefinition, class, unit, dateTimeFormatString, missingValueCode, missingValueCodeExplanation, lookup)
 
@@ -267,11 +269,12 @@ writeToFiles <- function(all_tables, data_dir = here::here("data", "final"), dic
 #'
 #' @param tbl_name Name of data table
 #' @param connection Database connection object
+#' @inheritParams RODBC::sqlQuery
 #'
 #' @return A tibble of tidy data
 #'
 fetchAndTidy <- function(tbl_name, connection, as.is) {
-  tidy_data <- tibble::as_tibble(RODBC::sqlFetch(connection, tbl_name, as.is = as.is, stringsAsFactors = FALSE)) %>%
+  tidy_data <- tibble::as_tibble(RODBC::sqlFetch(connection, tbl_name, as.is = as.is, stringsAsFactors = FALSE, na.strings = "")) %>%
     dplyr::mutate(dplyr::across(where(is.character), function(x) {
       x %>%
         utf8::utf8_encode() %>%  # Encode text as UTF-8 - this prevents a lot of parsing issues in R
@@ -311,7 +314,7 @@ getRClass <- function(fields, data) {
 #' @export
 #'
 makeColSpec <- function(fields) {
-  fields %<>%
+  fields <- fields %>%
     dplyr::mutate(colObject = dplyr::case_when(rClass == "character" ~ "c",
                                                rClass == "logical" ~ "l",
                                                rClass == "integer" ~ "i",
