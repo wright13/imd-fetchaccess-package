@@ -10,6 +10,10 @@ fetchAndTidy(tbl_name, connection, as.is)
 \item{tbl_name}{Name of data table}
 
 \item{connection}{Database connection object}
+
+\item{as.is}{which (if any) columns returned as character should be
+    converted to another type?  Allowed values are as for
+    \code{\link{read.table}}.  See \sQuote{Details}.}
 }
 \value{
 A tibble of tidy data

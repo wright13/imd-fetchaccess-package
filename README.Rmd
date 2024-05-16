@@ -14,6 +14,11 @@ knit: (function(inputFile, encoding) {
 ```{r setup, include=FALSE}
 library(magrittr)
 ```
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/wright13/imd-fetchaccess-package/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/wright13/imd-fetchaccess-package/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
+
 # About this package
 
 The `fetchaccess` R package and Access tool are designed to simplify the process of retrieving data and metadata from an Access database. While this package doesn't create an EML metadata file, it does produce a set of data dictionaries that are compatible with the `EMLassemblyline` package and replace some of the template files it generates which would otherwise be populated manually.

@@ -13,7 +13,9 @@ Imports:
     dplyr,
     here,
     hms,
+    lubridate,
     magrittr,
+    QCkit (>= 0.1.7),
     readr,
     RODBC,
     stringr,
@@ -21,3 +23,5 @@ Imports:
     utf8
 Roxygen: list(markdown = TRUE)
 URL: https://wright13.github.io/imd-fetchaccess-package/
+Remotes: 
+    nationalparkservice/QCkit

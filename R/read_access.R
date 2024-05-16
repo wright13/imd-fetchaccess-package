@@ -269,6 +269,7 @@ writeToFiles <- function(all_tables, data_dir = here::here("data", "final"), dic
 #'
 #' @param tbl_name Name of data table
 #' @param connection Database connection object
+#' @inheritParams RODBC::sqlQuery
 #'
 #' @return A tibble of tidy data
 #'
@@ -313,7 +314,7 @@ getRClass <- function(fields, data) {
 #' @export
 #'
 makeColSpec <- function(fields) {
-  fields %<>%
+  fields <- fields %>%
     dplyr::mutate(colObject = dplyr::case_when(rClass == "character" ~ "c",
                                                rClass == "logical" ~ "l",
                                                rClass == "integer" ~ "i",
