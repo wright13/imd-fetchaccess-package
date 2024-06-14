@@ -11,9 +11,10 @@ fetchFromAccess(
   lookup_prefix = "tlu",
   lookup_regex = paste0("(^", lookup_prefix, ".*)", collapse = "|"),
   as.is = FALSE,
-  add_r_classes = FALSE,
+  add_r_classes = TRUE,
   custom_wrangler,
   save_to_files = FALSE,
+  remove_empty_tables = TRUE,
   ...
 )
 }
@@ -32,11 +33,13 @@ fetchFromAccess(
     converted to another type?  Allowed values are as for
     \code{\link{read.table}}.  See \sQuote{Details}.}
 
-\item{add_r_classes}{Include R classes in addition to EML classes?}
+\item{add_r_classes}{DEPRECATED. Ignore this and allow it to default to \code{TRUE}. Include R classes in addition to EML classes?}
 
 \item{custom_wrangler}{Optional - function that takes arguments \code{data}, \code{lookups}, and \code{metadata}. \code{data} and \code{lookups} are lists whose names and content correspond to the data and lookup tables in the database. Names do not include prefixes. \code{metadata} contains a tibble of field-level metadata called \code{MetadataAttributes}. See qsys_MetadataAttributes in the Access database for the contents of this tibble. This function should perform any necessary data wrangling specific to your dataset and return a named list containing \code{data}, \code{lookups}, and \code{metadata} with contents modified as needed. Do not remove or add tibbles in \code{data} or \code{lookups} and do not modify their names. If you add, remove, or rename columns in a tibble in \code{data}, you must modify the contents of \code{metadata} accordingly. Do not modify the structure or column names of \code{metadata}. The structure and column names of \code{lookups} should also be left as-is. Typically the only necessary modification to \code{lookups} will be to filter overly large species lists to only include taxa that appear in the data.}
 
 \item{save_to_files}{Save data and data dictionaries to files on hard drive?}
+
+\item{remove_empty_tables}{Omit empty data and lookup tables from imported dataset? Default TRUE.}
 
 \item{...}{Options to pass to \code{\link[=writeToFiles]{writeToFiles()}}}
 }
