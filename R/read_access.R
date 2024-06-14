@@ -53,8 +53,8 @@ fetchFromAccess <- function(db_path,
 
   # Remove empty data and lookup tables from dataset
   if (remove_empty_tables) {
-    data <- QCkit::removeEmptyTables(data)
-    lookups <- QCkit::removeEmptyTables(lookups)
+    data <- removeEmptyTables(data)
+    lookups <- removeEmptyTables(lookups)
   }
 
   # Do custom data wrangling
