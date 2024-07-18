@@ -7,9 +7,10 @@
 #' @param data_regex Regular expression to match names of data tables. You can ignore this if your data table prefix(es) are specific to the tables you want to read in. If you only want to read in a subset of the tables specified by `data_prefix`, use this argument to specify only the tables you want. `data_prefix` is still required, as it is used to clean up table names.
 #' @param lookup_prefix Character vector of prefix(es) used in your Access database to indicate lookup tables. Be sure to include special characters like underscores (e.g. 'tlu_'). If you are using the `lookup_regex` argument, be sure to include prefixes for all matched tables.
 #' @param lookup_regex Regular expression to match names of lookup tables. You can ignore this if your lookup table prefix(es) are specific to the lookups you want to read in. If you only want to read in a subset of the lookup tables specified by `lookup_prefix`, use this argument to specify only the tables you want. This argument is especially useful if you have one or two tables labeled as 'data' tables (e.g. tbl_Sites) that act as lookups in some cases. `lookup_prefix` is still required, as it is used to clean up lookup names.
-#' @param add_r_classes Include R classes in addition to EML classes?
+#' @param add_r_classes DEPRECATED. Ignore this and allow it to default to `TRUE`. Include R classes in addition to EML classes?
 #' @param custom_wrangler Optional - function that takes arguments `data`, `lookups`, and `metadata`. `data` and `lookups` are lists whose names and content correspond to the data and lookup tables in the database. Names do not include prefixes. `metadata` contains a tibble of field-level metadata called `MetadataAttributes`. See qsys_MetadataAttributes in the Access database for the contents of this tibble. This function should perform any necessary data wrangling specific to your dataset and return a named list containing `data`, `lookups`, and `metadata` with contents modified as needed. Do not remove or add tibbles in `data` or `lookups` and do not modify their names. If you add, remove, or rename columns in a tibble in `data`, you must modify the contents of `metadata` accordingly. Do not modify the structure or column names of `metadata`. The structure and column names of `lookups` should also be left as-is. Typically the only necessary modification to `lookups` will be to filter overly large species lists to only include taxa that appear in the data.
 #' @param save_to_files Save data and data dictionaries to files on hard drive?
+#' @param remove_empty_tables Omit empty data and lookup tables from imported dataset? Default TRUE.
 #' @param ... Options to pass to [writeToFiles()]
 #' @inheritParams RODBC::sqlQuery
 #'
@@ -22,18 +23,20 @@ fetchFromAccess <- function(db_path,
                             data_regex = paste0("(^", data_prefix, ".*)", collapse = "|"),
                             lookup_prefix = "tlu",
                             lookup_regex = paste0("(^", lookup_prefix, ".*)", collapse = "|"),
-                            as.is = FALSE, add_r_classes = FALSE,
+                            as.is = FALSE, add_r_classes = TRUE,
                             custom_wrangler,
-                            save_to_files = FALSE, ...){
+                            save_to_files = FALSE,
+                            remove_empty_tables = TRUE, ...){
   connection <- RODBC::odbcConnectAccess2007(db_path)  # Load datasets for use. Pulls directly from Access database back end
 
-  metadata_prefix <- c("tsys_", "qsys_")  # Prefixes of metadata queries/tables
+  metadata_prefix <- c("tsys_editMetadata", "tsys_Metadata")  # Prefixes of metadata queries/tables
+  metadata_prefix_rm <- "tsys_"
   metadata_regex <- paste0("(^", metadata_prefix, ".*)", collapse = "|")  # Regex to match metadata table names
   table_search_string <- paste0(c(data_regex, lookup_regex, metadata_regex), collapse = "|")  # Regular expression to match all table names
 
   # Get names of tables to import
   tables <- RODBC::sqlTables(connection) %>%
-    dplyr::filter(TABLE_TYPE %in% c("TABLE", "VIEW"),
+    dplyr::filter(TABLE_TYPE %in% c("TABLE", "VIEW", "SYNONYM"),
                   grepl(table_search_string, TABLE_NAME))
   data_tables <- tables$TABLE_NAME[grepl(data_regex, tables$TABLE_NAME)]
   lookup_tables <- tables$TABLE_NAME[grepl(lookup_regex, tables$TABLE_NAME)]
@@ -45,8 +48,14 @@ fetchFromAccess <- function(db_path,
   lookups <- sapply(lookup_tables, fetchAndTidy, connection = connection, as.is = as.is)
   names(lookups) <- stringr::str_remove(lookup_tables, paste0("(", lookup_prefix, ")", collapse = "|"))
   metadata <- sapply(metadata_tables, fetchAndTidy, connection = connection, as.is = TRUE)
-  names(metadata) <- stringr::str_remove(metadata_tables, paste0("(", metadata_prefix, ")", collapse = "|"))
+  names(metadata) <- stringr::str_remove(metadata_tables, paste0("(", metadata_prefix_rm, ")", collapse = "|"))
   RODBC::odbcCloseAll()  # Close db connection
+
+  # Remove empty data and lookup tables from dataset
+  if (remove_empty_tables) {
+    data <- QCkit::remove_empty_tables(data)
+    lookups <- QCkit::remove_empty_tables(lookups)
+  }
 
   # Do custom data wrangling
   if (!missing(custom_wrangler)) {
@@ -112,8 +121,8 @@ fetchFromAccess <- function(db_path,
       desc_col <- lookup_defs$definitionColumnName[lookup_defs$lookupName == lkup_name]
       categories <- dplyr::select(lookups[[lkup_name]], dplyr::all_of(c(key_col, desc_col))) %>%
         dplyr::mutate(attributeName = category_attrs$attributeName[row_num]) %>%
-        dplyr::rename(code = key_col, definition = desc_col) %>%
-        dplyr::select(attributeName, code, definition)  # Make sure cols are in the right order
+        dplyr::mutate(code = key_col, definition = desc_col) %>%
+        dplyr::select(attributeName, code, definition, -dplyr::all_of(c(key_col, desc_col)))  # Make sure cols are in the right order
 
       return(categories)
     })
@@ -123,9 +132,7 @@ fetchFromAccess <- function(db_path,
     categories_dict <- tibble::tibble(attributeName = character(0), code = character(0), definition = character(0))  # make empty tibble if no categories info exists
   }
 
-  if (add_r_classes) {
-    fields_dict <- getRClass(fields_dict, data)
-  }
+  fields_dict <- getRClass(fields_dict, data)
 
   # Set correct column types based on metadata
   # Create column type spec
@@ -169,8 +176,11 @@ fetchFromAccess <- function(db_path,
   }, simplify = FALSE, USE.NAMES = TRUE)
 
   # Do this again to update column classes after fixing dates and times
-  if (add_r_classes) {
-    fields_dict <- getRClass(fields_dict, data)
+  fields_dict <- getRClass(fields_dict, data)
+
+  if (!add_r_classes) {
+    warning("The argument `add_r_classes` is deprecated. We recommend that you leave it as its default, `TRUE`.")
+    fields_dict <- dplyr::select(-rClass)
   }
 
   # Put everything in a list
