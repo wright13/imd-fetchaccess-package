@@ -1,42 +1,16 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://wright13.github.io/imd-fetchaccess-package/404.html</loc>
-  </url>
-  <url>
-    <loc>https://wright13.github.io/imd-fetchaccess-package/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>https://wright13.github.io/imd-fetchaccess-package/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://wright13.github.io/imd-fetchaccess-package/index.html</loc>
-  </url>
-  <url>
-    <loc>https://wright13.github.io/imd-fetchaccess-package/reference/fetchAndTidy.html</loc>
-  </url>
-  <url>
-    <loc>https://wright13.github.io/imd-fetchaccess-package/reference/fetchFromAccess.html</loc>
-  </url>
-  <url>
-    <loc>https://wright13.github.io/imd-fetchaccess-package/reference/fetchaccess-package.html</loc>
-  </url>
-  <url>
-    <loc>https://wright13.github.io/imd-fetchaccess-package/reference/getRClass.html</loc>
-  </url>
-  <url>
-    <loc>https://wright13.github.io/imd-fetchaccess-package/reference/getTemplateDatabase.html</loc>
-  </url>
-  <url>
-    <loc>https://wright13.github.io/imd-fetchaccess-package/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://wright13.github.io/imd-fetchaccess-package/reference/makeColSpec.html</loc>
-  </url>
-  <url>
-    <loc>https://wright13.github.io/imd-fetchaccess-package/reference/pipe.html</loc>
-  </url>
-  <url>
-    <loc>https://wright13.github.io/imd-fetchaccess-package/reference/writeToFiles.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://wright13.github.io/imd-fetchaccess-package/404.html</loc></url>
+<url><loc>https://wright13.github.io/imd-fetchaccess-package/LICENSE.html</loc></url>
+<url><loc>https://wright13.github.io/imd-fetchaccess-package/authors.html</loc></url>
+<url><loc>https://wright13.github.io/imd-fetchaccess-package/index.html</loc></url>
+<url><loc>https://wright13.github.io/imd-fetchaccess-package/reference/fetchAndTidy.html</loc></url>
+<url><loc>https://wright13.github.io/imd-fetchaccess-package/reference/fetchFromAccess.html</loc></url>
+<url><loc>https://wright13.github.io/imd-fetchaccess-package/reference/fetchaccess-package.html</loc></url>
+<url><loc>https://wright13.github.io/imd-fetchaccess-package/reference/getRClass.html</loc></url>
+<url><loc>https://wright13.github.io/imd-fetchaccess-package/reference/getTemplateDatabase.html</loc></url>
+<url><loc>https://wright13.github.io/imd-fetchaccess-package/reference/index.html</loc></url>
+<url><loc>https://wright13.github.io/imd-fetchaccess-package/reference/makeColSpec.html</loc></url>
+<url><loc>https://wright13.github.io/imd-fetchaccess-package/reference/pipe.html</loc></url>
+<url><loc>https://wright13.github.io/imd-fetchaccess-package/reference/writeToFiles.html</loc></url>
 </urlset>
+
