@@ -24,4 +24,4 @@ Imports:
 Roxygen: list(markdown = TRUE)
 URL: https://wright13.github.io/imd-fetchaccess-package/
 Remotes: 
-    nationalparkservice/QCkit
+    doi-nps/QCkit
