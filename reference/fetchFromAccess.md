@@ -1,0 +1,118 @@
+# Fetch data from Access database
+
+This function assumes that you are using the Access Metadata Generator
+in your Access database.
+
+## Usage
+
+``` r
+fetchFromAccess(
+  db_path,
+  data_prefix = "qExport",
+  data_regex = paste0("(^", data_prefix, ".*)", collapse = "|"),
+  lookup_prefix = "tlu",
+  lookup_regex = paste0("(^", lookup_prefix, ".*)", collapse = "|"),
+  as.is = FALSE,
+  add_r_classes = TRUE,
+  custom_wrangler,
+  save_to_files = FALSE,
+  remove_empty_tables = TRUE,
+  ...
+)
+```
+
+## Arguments
+
+- db_path:
+
+  Path to your Access database
+
+- data_prefix:
+
+  Character vector of prefix(es) used in your Access database to
+  indicate data export tables and/or queries.Be sure to include special
+  characters like underscores (e.g. 'tbl\_'). If you are using the
+  `data_regex` argument, be sure to include prefixes for all matched
+  tables.
+
+- data_regex:
+
+  Regular expression to match names of data tables. You can ignore this
+  if your data table prefix(es) are specific to the tables you want to
+  read in. If you only want to read in a subset of the tables specified
+  by `data_prefix`, use this argument to specify only the tables you
+  want. `data_prefix` is still required, as it is used to clean up table
+  names.
+
+- lookup_prefix:
+
+  Character vector of prefix(es) used in your Access database to
+  indicate lookup tables. Be sure to include special characters like
+  underscores (e.g. 'tlu\_'). If you are using the `lookup_regex`
+  argument, be sure to include prefixes for all matched tables.
+
+- lookup_regex:
+
+  Regular expression to match names of lookup tables. You can ignore
+  this if your lookup table prefix(es) are specific to the lookups you
+  want to read in. If you only want to read in a subset of the lookup
+  tables specified by `lookup_prefix`, use this argument to specify only
+  the tables you want. This argument is especially useful if you have
+  one or two tables labeled as 'data' tables (e.g. tbl_Sites) that act
+  as lookups in some cases. `lookup_prefix` is still required, as it is
+  used to clean up lookup names.
+
+- as.is:
+
+  which (if any) columns returned as character should be converted to
+  another type? Allowed values are as for
+  [`read.table`](https://rdrr.io/r/utils/read.table.html). See
+  ‘Details’.
+
+- add_r_classes:
+
+  DEPRECATED. Ignore this and allow it to default to `TRUE`. Include R
+  classes in addition to EML classes?
+
+- custom_wrangler:
+
+  Optional - function that takes arguments `data`, `lookups`, and
+  `metadata`. `data` and `lookups` are lists whose names and content
+  correspond to the data and lookup tables in the database. Names do not
+  include prefixes. `metadata` contains a tibble of field-level metadata
+  called `MetadataAttributes`. See qsys_MetadataAttributes in the Access
+  database for the contents of this tibble. This function should perform
+  any necessary data wrangling specific to your dataset and return a
+  named list containing `data`, `lookups`, and `metadata` with contents
+  modified as needed. Do not remove or add tibbles in `data` or
+  `lookups` and do not modify their names. If you add, remove, or rename
+  columns in a tibble in `data`, you must modify the contents of
+  `metadata` accordingly. Do not modify the structure or column names of
+  `metadata`. The structure and column names of `lookups` should also be
+  left as-is. Typically the only necessary modification to `lookups`
+  will be to filter overly large species lists to only include taxa that
+  appear in the data.
+
+- save_to_files:
+
+  Save data and data dictionaries to files on hard drive?
+
+- remove_empty_tables:
+
+  Omit empty data and lookup tables from imported dataset? Default TRUE.
+
+- ...:
+
+  Options to pass to
+  [`writeToFiles()`](https://wright13.github.io/imd-fetchaccess-package/reference/writeToFiles.md)
+
+## Value
+
+A nested list containing three lists of tibbles: data, lookups, and
+metadata.
+
+## Details
+
+See [`RODBC::sqlFetch()`](https://rdrr.io/pkg/RODBC/man/sqlFetch.html)
+and [`RODBC::sqlQuery()`](https://rdrr.io/pkg/RODBC/man/sqlQuery.html)
+for more information on the `as.is` argument.
